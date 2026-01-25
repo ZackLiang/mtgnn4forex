@@ -10,7 +10,7 @@ from util import DataLoaderS
 # ================= 配置区域 =================
 # 指向您现在已有的模型和数据
 DATA_PATH = './data/G31_RawPrice.txt'     # 您的数据路径
-MODEL_PATH = './model/model_g31_raw.pt'   # 您跑出来的模型路径
+MODEL_PATH = './model/model_revin.pt'   # 您跑出来的模型路径
 DEVICE = torch.device("mps" if torch.backends.mps.is_available() else "cpu")  # Mac 用 mps，否则用 cpu
 
 # 节点名称 (按您的数据顺序)

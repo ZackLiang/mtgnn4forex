@@ -2,7 +2,7 @@ from layer import *
 
 
 class gtnet(nn.Module):
-    def __init__(self, gcn_true, buildA_true, gcn_depth, num_nodes, device, predefined_A=None, static_feat=None, dropout=0.3, subgraph_size=20, node_dim=40, dilation_exponential=1, conv_channels=32, residual_channels=32, skip_channels=64, end_channels=128, seq_length=12, in_dim=2, out_dim=12, layers=3, propalpha=0.05, tanhalpha=3, layer_norm_affline=True):
+    def __init__(self, gcn_true, buildA_true, gcn_depth, num_nodes, device, predefined_A=None, static_feat=None, dropout=0.3, subgraph_size=20, node_dim=40, dilation_exponential=1, conv_channels=32, residual_channels=32, skip_channels=64, end_channels=128, seq_length=12, in_dim=2, out_dim=12, layers=3, propalpha=0.05, tanhalpha=3, layer_norm_affline=True,revin=True):
         super(gtnet, self).__init__()
         self.gcn_true = gcn_true
         self.buildA_true = buildA_true
@@ -22,6 +22,11 @@ class gtnet(nn.Module):
         self.gc = graph_constructor(num_nodes, subgraph_size, node_dim, device, alpha=tanhalpha, static_feat=static_feat)
 
         self.seq_length = seq_length
+        ## 添加 RevIN 层
+        self.revin_enabled = revin ##创新点1：是否启用 RevIN
+        if self.revin_enabled:
+            self.revin = RevIN(num_nodes, affine=True)
+
         kernel_size = 7
         if dilation_exponential>1:
             self.receptive_field = int(1+(kernel_size-1)*(dilation_exponential**layers-1)/(dilation_exponential-1))
@@ -90,11 +95,11 @@ class gtnet(nn.Module):
         seq_len = input.size(3)
         assert seq_len==self.seq_length, 'input sequence length not equal to preset sequence length'
 
+        if self.revin_enabled:
+            input = self.revin(input, 'norm')##创新点1：归一化
+
         if self.seq_length<self.receptive_field:
             input = nn.functional.pad(input,(self.receptive_field-self.seq_length,0,0,0))
-
-
-
         if self.gcn_true:
             if self.buildA_true:
                 if idx is None:
@@ -105,6 +110,7 @@ class gtnet(nn.Module):
                 adp = self.predefined_A
 
         x = self.start_conv(input)
+        # 注意：这里的 skip0 也要用归一化后的 input
         skip = self.skip0(F.dropout(input, self.dropout, training=self.training))
         for i in range(self.layers):
             residual = x
@@ -132,4 +138,6 @@ class gtnet(nn.Module):
         x = F.relu(skip)
         x = F.relu(self.end_conv_1(x))
         x = self.end_conv_2(x)
+        if self.revin_enabled:
+            x = self.revin(x, 'denorm', target_idx=0)##创新点1：返回归一化前的结果
         return x

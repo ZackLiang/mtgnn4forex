@@ -326,3 +326,63 @@ class LayerNorm(nn.Module):
     def extra_repr(self):
         return '{normalized_shape}, eps={eps}, ' \
             'elementwise_affine={elementwise_affine}'.format(**self.__dict__)
+
+## 创新点1: RevIN —— 解决“分布漂移”问题
+class RevIN(nn.Module):
+    def __init__(self, num_nodes, eps=1e-5, affine=True):
+        """
+        :param num_nodes: 这里的 num_features 对应 MTGNN 的节点数 (num_nodes)
+        """
+        super(RevIN, self).__init__()
+        self.num_nodes = num_nodes
+        self.eps = eps
+        self.affine = affine
+        if self.affine:
+            self._init_params()
+
+    def _init_params(self):
+        # 初始化为 (num_nodes)
+        self.affine_weight = nn.Parameter(torch.ones(self.num_nodes))
+        self.affine_bias = nn.Parameter(torch.zeros(self.num_nodes))
+
+    def forward(self, x, mode:str, target_idx=0):
+        if mode == 'norm':
+            self._get_statistics(x)
+            x = self._normalize(x)
+        elif mode == 'denorm':
+            x = self._denormalize(x, target_idx)
+        return x
+
+    def _get_statistics(self, x):
+        # x shape: (Batch, In_Dim, Nodes, Seq_Len)
+        # 我们对时间维度 (Seq_Len) 求均值，得到每个 Batch、每个特征、每个节点的统计量
+        self.mean = torch.mean(x, dim=-1, keepdim=True).detach()
+        self.stdev = torch.sqrt(torch.var(x, dim=-1, keepdim=True, unbiased=False) + self.eps).detach()
+
+    def _normalize(self, x):
+        x = x - self.mean
+        x = x / self.stdev
+        if self.affine:
+            # 修正点 1: view(1, 1, -1, 1) 对应 (Batch, In_Dim, Nodes, Seq_Len)
+            x = x * self.affine_weight.view(1, 1, -1, 1) + self.affine_bias.view(1, 1, -1, 1)
+        return x
+
+    def _denormalize(self, x, target_idx):
+        # x shape (Output): (Batch, Out_Horizon, Nodes, 1)
+        # mean shape (Input): (Batch, In_Dim, Nodes, 1)
+        
+        # 修正点 2: 只取目标特征 (通常是第0个特征: 收盘价) 的均值/方差
+        # 并将其广播到输出的时间维度
+        if self.mean.shape[1] != x.shape[1]:
+            mean = self.mean[:, target_idx:target_idx+1, :, :]
+            stdev = self.stdev[:, target_idx:target_idx+1, :, :]
+        else:
+            mean = self.mean
+            stdev = self.stdev
+
+        if self.affine:
+            x = (x - self.affine_bias.view(1, 1, -1, 1)) / (self.affine_weight.view(1, 1, -1, 1) + 1e-7)
+        
+        x = x * stdev
+        x = x + mean
+        return x
