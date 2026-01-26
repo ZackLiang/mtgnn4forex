@@ -5,6 +5,8 @@ import torch
 import torch.nn as nn
 from net import gtnet
 import numpy as np
+import importlib
+import pickle
 from util import DataLoaderS
 from trainer import Optim
 
@@ -69,10 +71,20 @@ def evaluate(data, X, Y, model, evaluateL2, evaluateL1, batch_size):
     correlation = ((predict - mean_p) * (Ytest - mean_g)).mean(axis=0) / (sigma_p * sigma_g)
     correlation = (correlation[index]).mean()
     
-    # R2 Score
-    ss_res = np.sum((Ytest - predict) ** 2)
-    ss_tot = np.sum((Ytest - np.mean(Ytest)) ** 2)
-    r2 = 1 - ss_res / ss_tot
+    r2_list = []
+    for i in range(predict.shape[1]): # 遍历每个节点(货币)
+        y_true_node = Ytest[:, i]
+        y_pred_node = predict[:, i]
+        ss_res_node = np.sum((y_true_node - y_pred_node) ** 2)
+        ss_tot_node = np.sum((y_true_node - np.mean(y_true_node)) ** 2)
+        
+        # 防止分母为0
+        if ss_tot_node < 1e-5:
+            r2_node = 0
+        else:
+            r2_node = 1 - ss_res_node / ss_tot_node
+        r2_list.append(r2_node)
+    r2 = np.mean(r2_list)
 
     return rse, rae, correlation, mae, rmse, mape, r2
 
@@ -153,6 +165,8 @@ parser.add_argument('--epochs',type=int,default=1,help='')
 parser.add_argument('--num_split',type=int,default=1,help='number of splits for graphs')
 parser.add_argument('--step_size',type=int,default=100,help='step_size')
 parser.add_argument('--revin', type=int, default=1, help='1 to use RevIN, 0 to disable')
+parser.add_argument('--dual_graph', type=int, default=1, help='1 to use Dual Graph, 0 to disable')
+parser.add_argument('--adj_data', type=str, default='./data/sensor_graph/adj_mx.pkl', help='path to static graph')
 # 新增 runs 参数
 parser.add_argument('--runs', type=int, default=10, help='number of runs to average')
 
@@ -179,6 +193,21 @@ def main(run_id):
     # Data Loader 初始化
     Data = DataLoaderS(args.data, 0.6, 0.2, device, args.horizon, args.seq_in_len, args.normalize)
 
+    # === 创新点2：加载静态图代码开始 ===
+    predefined_A = None
+    if args.dual_graph == 1:
+        print(f"Loading static graph from: {args.adj_data}")
+        try:
+            with open(args.adj_data, 'rb') as f:
+                adj_mx = pickle.load(f)
+            # 转为 Tensor 并送到 GPU (确保是 float32)
+            predefined_A = torch.tensor(adj_mx, dtype=torch.float32).to(device)
+        except Exception as e:
+            print(f"Failed to load static graph: {e}")
+            print("Fallback: Dual Graph will be disabled (predefined_A=None).")
+            predefined_A = None
+
+
     # 模型初始化
     model = gtnet(args.gcn_true, args.buildA_true, args.gcn_depth, args.num_nodes,
                   device, dropout=args.dropout, subgraph_size=args.subgraph_size,
@@ -188,7 +217,9 @@ def main(run_id):
                   seq_length=args.seq_in_len, in_dim=args.in_dim, out_dim=args.seq_out_len,
                   layers=args.layers, propalpha=args.propalpha, tanhalpha=args.tanhalpha, 
                   layer_norm_affline=False, 
-                  revin=(args.revin == 1))
+                  revin=(args.revin == 1),
+                  dual_graph=(args.dual_graph == 1),
+                  predefined_A=predefined_A)
     model = model.to(device)
 
     # Loss 设置

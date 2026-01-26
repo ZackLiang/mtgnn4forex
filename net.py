@@ -2,7 +2,7 @@ from layer import *
 
 
 class gtnet(nn.Module):
-    def __init__(self, gcn_true, buildA_true, gcn_depth, num_nodes, device, predefined_A=None, static_feat=None, dropout=0.3, subgraph_size=20, node_dim=40, dilation_exponential=1, conv_channels=32, residual_channels=32, skip_channels=64, end_channels=128, seq_length=12, in_dim=2, out_dim=12, layers=3, propalpha=0.05, tanhalpha=3, layer_norm_affline=True,revin=True):
+    def __init__(self, gcn_true, buildA_true, gcn_depth, num_nodes, device, predefined_A=None, static_feat=None, dropout=0.3, subgraph_size=20, node_dim=40, dilation_exponential=1, conv_channels=32, residual_channels=32, skip_channels=64, end_channels=128, seq_length=12, in_dim=2, out_dim=12, layers=3, propalpha=0.05, tanhalpha=3, layer_norm_affline=True,revin=True,dual_graph=True):
         super(gtnet, self).__init__()
         self.gcn_true = gcn_true
         self.buildA_true = buildA_true
@@ -26,6 +26,12 @@ class gtnet(nn.Module):
         self.revin_enabled = revin ##创新点1：是否启用 RevIN
         if self.revin_enabled:
             self.revin = RevIN(num_nodes, affine=True)
+
+        # === 创新点 2: Dual Graph (新增) ===
+        self.dual_graph = dual_graph
+        # 如果开启双图但没传图进来，警告一下
+        if self.dual_graph and self.predefined_A is None:
+             print("Warning: Dual Graph is enabled but predefined_A is None!")
 
         kernel_size = 7
         if dilation_exponential>1:
@@ -100,14 +106,16 @@ class gtnet(nn.Module):
 
         if self.seq_length<self.receptive_field:
             input = nn.functional.pad(input,(self.receptive_field-self.seq_length,0,0,0))
+
+        adp_learned = None
         if self.gcn_true:
             if self.buildA_true:
                 if idx is None:
-                    adp = self.gc(self.idx)
+                    adp_learned= self.gc(self.idx)
                 else:
-                    adp = self.gc(idx)
+                    adp_learned= self.gc(idx)
             else:
-                adp = self.predefined_A
+                adp_learned = self.predefined_A
 
         x = self.start_conv(input)
         # 注意：这里的 skip0 也要用归一化后的 input
@@ -123,8 +131,23 @@ class gtnet(nn.Module):
             s = x
             s = self.skip_convs[i](s)
             skip = s + skip
+            
             if self.gcn_true:
-                x = self.gconv1[i](x, adp)+self.gconv2[i](x, adp.transpose(1,0))
+                # 1. 计算动态图结果 (Original)
+                x_dynamic = self.gconv1[i](x, adp_learned) + self.gconv2[i](x, adp_learned.transpose(1,0))
+                
+                # 2. 计算静态图结果 (New)
+                # 只有当开关开启，且确实传进来了图，才计算
+                if self.dual_graph and (self.predefined_A is not None):
+                    # 【重要】我们复用 gconv 的权重 (Weight Sharing)
+                    # 这样参数量不增加，不易过拟合
+                    x_static = self.gconv1[i](x, self.predefined_A) + self.gconv2[i](x, self.predefined_A.transpose(1,0))
+                    
+                    # 3. 融合：这里直接相加 (Add)，你也可以改成加权平均
+                    x = x_dynamic + x_static
+                else:
+                    # 没开双图，就只用动态图
+                    x = x_dynamic
             else:
                 x = self.residual_convs[i](x)
 
@@ -138,6 +161,7 @@ class gtnet(nn.Module):
         x = F.relu(skip)
         x = F.relu(self.end_conv_1(x))
         x = self.end_conv_2(x)
+
         if self.revin_enabled:
             x = self.revin(x, 'denorm', target_idx=0)##创新点1：返回归一化前的结果
         return x

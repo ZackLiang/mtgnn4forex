@@ -386,3 +386,31 @@ class RevIN(nn.Module):
         x = x * stdev
         x = x + mean
         return x
+
+class FrequencyAttention(nn.Module):
+    def __init__(self, channels, seq_len):
+        """
+        :param channels: 输入特征的通道数
+        :param seq_len: 时间序列长度
+        """
+        super(FrequencyAttention, self).__init__()
+        self.seq_len = seq_len
+        # FFT 后频率维度长度为 (seq_len // 2) + 1
+        # 我们学习一个 Mask 来调整不同频率的振幅
+        self.freq_mask = nn.Parameter(torch.ones(1, channels, 1, seq_len // 2 + 1))
+
+    def forward(self, x):
+        # x shape: (Batch, Channel, Node, Seq_Len)
+        
+        # 1. 快速傅里叶变换 (RFFT) 转到频域
+        # rfft 输出复数 tensor
+        x_fft = torch.fft.rfft(x, dim=-1)
+        
+        # 2. 频域注意力 (Gating)
+        # 用可学习的 Mask 乘以频域特征 (广播机制)
+        x_fft = x_fft * self.freq_mask
+        
+        # 3. 傅里叶逆变换 (IRFFT) 转回时域
+        x = torch.fft.irfft(x_fft, n=self.seq_len, dim=-1)
+        
+        return x

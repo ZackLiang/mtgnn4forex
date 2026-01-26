@@ -32,7 +32,17 @@ python train_single_step.py \
   --runs 5 \
   --save ./model/model_baseline.pt
 
-
+## 结果：
+Summary over 5 runs
+==================================================
+Metric     | Mean       | Std       
+------------------------------------
+MAE        | 0.4916     | 0.1338    
+RMSE       | 2.4691     | 0.4614    
+MAPE       | 0.0034     | 0.0012    
+R2         | 0.9973     | 0.0017    
+RSE        | 0.0059     | 0.0011    
+CORR       | 0.9914     | 0.0008  
 
 
 # 创新点1:RevIN —— 解决“分布漂移”问题
@@ -42,3 +52,29 @@ python train_single_step.py \
 ### 归一化 (Normalize): 在输入模型前，减去当前窗口的均值 $\mu$，除以标准差 $\sigma$。让模型只学“形态”，不学“绝对数值”。
 ### 模型计算: 中间经过 MTGNN 的各种卷积。
 ### 反归一化 (Denormalize): 在输出预测结果后，乘回 $\sigma$，加上 $\mu$。恢复真实的金融数值
+
+## 训练指令
+python train_single_step.py \
+  --data ./data/G31_RawPrice.txt \
+  --num_nodes 31 \
+  --subgraph_size 20 \
+  --seq_in_len 168 \
+  --epochs 30 \
+  --normalize 0 \
+  --revin 1 \
+  --runs 5 \
+  --save ./model/model_revin.pt
+
+## 结果：
+==================================================
+Summary over 5 runs
+==================================================
+Metric     | Mean       | Std       
+------------------------------------
+MAE        | 0.1646     | 0.0004    
+RMSE       | 1.1558     | 0.0010    
+MAPE       | 0.0009     | 0.0000    
+R2         | 1.0000     | 0.0000    
+RSE        | 0.0027     | 0.0000    
+CORR       | 0.9974     | 0.0000    
+==================================================
