@@ -265,6 +265,10 @@ def main(run_id):
 
     test_rse, test_rae, test_corr, test_mae, test_rmse, test_mape, test_r2 = evaluate(Data, Data.test[0], Data.test[1], model, evaluateL2, evaluateL1, args.batch_size)
     print(f"Run {run_id+1} Final Test: RSE {test_rse:.4f} | MAE {test_mae:.4f} | RMSE {test_rmse:.4f} | R2 {test_r2:.4f}")
+
+    # 打印学习到的融合权重
+    if args.dual_graph == 1 and hasattr(model, 'fusion_weight'):
+        print(f"Model Learned Fusion Weight: {model.fusion_weight.item():.4f}")
     
     return test_rse, test_rae, test_corr, test_mae, test_rmse, test_mape, test_r2
 

@@ -30,6 +30,8 @@ class gtnet(nn.Module):
         # === 创新点 2: Dual Graph (新增) ===
         self.dual_graph = dual_graph
         # 如果开启双图但没传图进来，警告一下
+        if self.dual_graph:
+            self.fusion_weight = nn.Parameter(torch.tensor(0.3, dtype=torch.float32), requires_grad=True)
         if self.dual_graph and self.predefined_A is None:
              print("Warning: Dual Graph is enabled but predefined_A is None!")
 
@@ -144,7 +146,7 @@ class gtnet(nn.Module):
                     x_static = self.gconv1[i](x, self.predefined_A) + self.gconv2[i](x, self.predefined_A.transpose(1,0))
                     
                     # 3. 融合：这里直接相加 (Add)，你也可以改成加权平均
-                    x = x_dynamic + x_static
+                    x = x_dynamic + self.fusion_weight * x_static
                 else:
                     # 没开双图，就只用动态图
                     x = x_dynamic

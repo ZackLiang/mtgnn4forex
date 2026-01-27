@@ -80,19 +80,51 @@ CORR       | 0.9974     | 0.0000
 ==================================================
 
 
-## 创新点2:
+# 创新点2:Dual Graph
+## 训练指令：
+python train_single_step.py \
+  --data ./data/G31_RawPrice.txt \
+  --num_nodes 31 \
+  --subgraph_size 20 \
+  --seq_in_len 168 \
+  --epochs 30 \
+  --normalize 0 \
+  --revin 1 \
+  --dual_graph 1 \
+  --adj_data ./data/sensor_graph/adj_mx.pkl \
+  --runs 5 \
+  --save ./model/model_dual.pt
 
-
+## 结果
+| end of epoch  30 | time: 145.60s | loss 0.1384 | rse 0.0021 | mae 0.1324 | rmse 0.8710 | r2 0.9949
+Run 5 Final Test: RSE 0.0027 | MAE 0.1643 | RMSE 1.1549 | R2 0.9947
+Model Learned Fusion Weight: 0.2909
 
 ==================================================
 Summary over 5 runs
 ==================================================
 Metric     | Mean       | Std       
 ------------------------------------
-MAE        | 0.1699     | 0.0015    
-RMSE       | 1.1725     | 0.0023    
-MAPE       | 0.0010     | 0.0000    
-R2         | 0.9944     | 0.0000    
-RSE        | 0.0028     | 0.0000    
-CORR       | 0.9972     | 0.0000    
-==================================================
+MAE        | 0.1643     | 0.0005    
+RMSE       | 1.1561     | 0.0020    
+MAPE       | 0.0009     | 0.0000    
+R2         | 0.9947     | 0.0000    
+RSE        | 0.0027     | 0.0000    
+CORR       | 0.9974     | 0.0000 
+
+
+
+
+
+
+
+
+
+
+## 最后结果呈现：
+实验设置	RevIN	Dual Graph	创新点3	结果 (MAE)	评价 (Story)
+Baseline	✗	✗	✗	0.4916	原始模型
+Model A	✓	✗	✗	0.1646	核心地基 (证明 RevIN 必不可少)
+Model B	✓	✓	✗	0.15xx	结构增强 (证明双图有效)
+Model C	✓	✗	✓	0.15xx	频域增强 (证明频域有效)
+Ours	✓	✓	✓	0.14xx	完全体 (集大成者)
