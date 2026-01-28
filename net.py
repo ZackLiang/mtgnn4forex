@@ -2,7 +2,7 @@ from layer import *
 
 
 class gtnet(nn.Module):
-    def __init__(self, gcn_true, buildA_true, gcn_depth, num_nodes, device, predefined_A=None, static_feat=None, dropout=0.3, subgraph_size=20, node_dim=40, dilation_exponential=1, conv_channels=32, residual_channels=32, skip_channels=64, end_channels=128, seq_length=12, in_dim=2, out_dim=12, layers=3, propalpha=0.05, tanhalpha=3, layer_norm_affline=True,revin=True,dual_graph=True):
+    def __init__(self, gcn_true, buildA_true, gcn_depth, num_nodes, device, predefined_A=None, static_feat=None, dropout=0.3, subgraph_size=20, node_dim=40, dilation_exponential=1, conv_channels=32, residual_channels=32, skip_channels=64, end_channels=128, seq_length=12, in_dim=2, out_dim=12, layers=3, propalpha=0.05, tanhalpha=3, layer_norm_affline=True,revin=True,dual_graph=True,freq_att=False):
         super(gtnet, self).__init__()
         self.gcn_true = gcn_true
         self.buildA_true = buildA_true
@@ -40,6 +40,14 @@ class gtnet(nn.Module):
             self.receptive_field = int(1+(kernel_size-1)*(dilation_exponential**layers-1)/(dilation_exponential-1))
         else:
             self.receptive_field = layers*(kernel_size-1) + 1
+        
+        # === 创新点 3: 初始化频域注意力模块 (插入在这里！) ===
+        self.freq_att_enabled = freq_att
+        if self.freq_att_enabled:
+            # 放在 start_conv 之后，通道数变成了 residual_channels
+            # 序列长度会被 pad 到 receptive_field，所以这里用 self.receptive_field
+            self.freq_att_layer = FrequencyAttention(channels=residual_channels, seq_len=self.receptive_field)
+
 
         for i in range(1):
             if dilation_exponential>1:
@@ -120,6 +128,10 @@ class gtnet(nn.Module):
                 adp_learned = self.predefined_A
 
         x = self.start_conv(input)
+        # === 创新点 3: 应用频域注意力 (插入在这里！) ===
+        # 在进入深层网络之前，先进行全局频域去噪
+        if self.freq_att_enabled:
+            x = self.freq_att_layer(x)
         # 注意：这里的 skip0 也要用归一化后的 input
         skip = self.skip0(F.dropout(input, self.dropout, training=self.training))
         for i in range(self.layers):

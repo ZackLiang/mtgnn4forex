@@ -167,6 +167,7 @@ parser.add_argument('--step_size',type=int,default=100,help='step_size')
 parser.add_argument('--revin', type=int, default=1, help='1 to use RevIN, 0 to disable')
 parser.add_argument('--dual_graph', type=int, default=1, help='1 to use Dual Graph, 0 to disable')
 parser.add_argument('--adj_data', type=str, default='./data/sensor_graph/adj_mx.pkl', help='path to static graph')
+parser.add_argument('--freq_att', type=int, default=1, help='whether to enable Frequency Attention')
 # 新增 runs 参数
 parser.add_argument('--runs', type=int, default=10, help='number of runs to average')
 
@@ -219,6 +220,7 @@ def main(run_id):
                   layer_norm_affline=False, 
                   revin=(args.revin == 1),
                   dual_graph=(args.dual_graph == 1),
+                  freq_att=(args.freq_att == 1),
                   predefined_A=predefined_A)
     model = model.to(device)
 

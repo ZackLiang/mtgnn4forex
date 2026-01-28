@@ -387,30 +387,41 @@ class RevIN(nn.Module):
         x = x + mean
         return x
 
+# === 创新点 3: 频域注意力模块 (Frequency Domain Attention) ===
+# 作用：利用 FFT 将特征映射到频域，通过自适应权重过滤高频噪声，提取低频主趋势。
 class FrequencyAttention(nn.Module):
     def __init__(self, channels, seq_len):
         """
-        :param channels: 输入特征的通道数
-        :param seq_len: 时间序列长度
+        :param channels: 输入通道数 (residual_channels)
+        :param seq_len: 输入序列长度 (receptive_field)
         """
         super(FrequencyAttention, self).__init__()
         self.seq_len = seq_len
-        # FFT 后频率维度长度为 (seq_len // 2) + 1
-        # 我们学习一个 Mask 来调整不同频率的振幅
-        self.freq_mask = nn.Parameter(torch.ones(1, channels, 1, seq_len // 2 + 1))
+        self.channels = channels
+        
+        # RFFT 变换后的频点数量是 (N/2) + 1
+        freq_len = seq_len // 2 + 1
+        
+        # 定义一个可学习的频域掩码 (Mask)
+        # 初始值设为 1 (全通)，让模型自己学哪些频率该保留，哪些该抑制
+        # 形状: (1, Channels, 1, Freq_Len)
+        self.freq_weight = nn.Parameter(torch.ones(1, channels, 1, freq_len, dtype=torch.float32))
 
     def forward(self, x):
-        # x shape: (Batch, Channel, Node, Seq_Len)
+        # x shape: (Batch, Channels, Nodes, Seq_Len)
         
         # 1. 快速傅里叶变换 (RFFT) 转到频域
-        # rfft 输出复数 tensor
+        # dim=-1 表示在时间维度上做变换
         x_fft = torch.fft.rfft(x, dim=-1)
         
-        # 2. 频域注意力 (Gating)
-        # 用可学习的 Mask 乘以频域特征 (广播机制)
-        x_fft = x_fft * self.freq_mask
+        # 2. 频域滤波 (Filtering)
+        # 构造复数权重：实部为学习到的 freq_weight，虚部为 0 (仅调整振幅 Amplitude)
+        weight = torch.complex(self.freq_weight, torch.zeros_like(self.freq_weight)).to(x.device)
+        x_fft = x_fft * weight
         
         # 3. 傅里叶逆变换 (IRFFT) 转回时域
-        x = torch.fft.irfft(x_fft, n=self.seq_len, dim=-1)
+        x_out = torch.fft.irfft(x_fft, n=self.seq_len, dim=-1)
         
-        return x
+        # 残差连接 (Residual Connection): 
+        # 原始信息 + 滤波后的去噪信息
+        return x_out

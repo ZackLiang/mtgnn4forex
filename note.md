@@ -113,6 +113,25 @@ RSE        | 0.0027     | 0.0000
 CORR       | 0.9974     | 0.0000 
 
 
+# 创新点3:频域注意力机制
+## 训练指令：
+python train_single_step.py \
+  --data ./data/G31_RawPrice.txt \
+  --num_nodes 31 \
+  --subgraph_size 20 \
+  --seq_in_len 168 \
+  --epochs 30 \
+  --normalize 0 \
+  --revin 1 \
+  --dual_graph 1 \
+  --adj_data ./data/sensor_graph/adj_mx.pkl \
+  --freq_att 1 \
+  --runs 5 \
+  --save ./model/model_ours.pt
+
+## 结果：
+
+
 
 
 
