@@ -18,6 +18,7 @@ def evaluate(data, X, Y, model, evaluateL2, evaluateL1, batch_size):
     total_loss = 0
     total_loss_l1 = 0
     total_mape = 0
+    total_da_correct = 0
     n_samples = 0
     predict = None
     test = None
@@ -49,6 +50,17 @@ def evaluate(data, X, Y, model, evaluateL2, evaluateL1, batch_size):
         # 计算 MAPE (加 1e-5 防止除零)
         mape_batch = torch.abs((pred_real - true_real) / (true_real + 1e-5))
         total_mape += torch.sum(mape_batch).item()
+
+        # === 创新点2：计算方向准确率 (DA) ===
+        # 获取输入序列的最后一步(今天真实的收盘价)
+        last_price = X[:, 0, :, -1] * scale
+        # 预测涨跌
+        diff_pred = pred_real - last_price
+        # 实际涨跌
+        diff_true = true_real - last_price
+        # 符号相同即为预测正确 (乘积大于0)
+        correct_mask = (diff_pred * diff_true) > 0
+        total_da_correct += correct_mask.sum().item()
         
         n_samples += (output.size(0) * data.m)
 
@@ -59,6 +71,7 @@ def evaluate(data, X, Y, model, evaluateL2, evaluateL1, batch_size):
     rmse = math.sqrt(total_loss / n_samples)
     mae = total_loss_l1 / n_samples
     mape = total_mape / n_samples
+    da = total_da_correct / n_samples
 
     # 计算 Correlation 和 R2
     predict = predict.data.cpu().numpy()
@@ -86,7 +99,7 @@ def evaluate(data, X, Y, model, evaluateL2, evaluateL1, batch_size):
         r2_list.append(r2_node)
     r2 = np.mean(r2_list)
 
-    return rse, rae, correlation, mae, rmse, mape, r2
+    return rse, rae, correlation, mae, rmse, mape, r2,da
 
 # ==========================================
 # 2. Train 函数
@@ -116,7 +129,23 @@ def train(data, X, Y, model, criterion, optim, batch_size):
             output = torch.squeeze(output)
             scale = data.scale.expand(output.size(0), data.m)
             scale = scale[:,id]
-            loss = criterion(output * scale, ty * scale)
+            # DA损失函数
+            base_loss = criterion(output * scale, ty * scale)
+            if args.use_dirloss == 1:
+                # 取出今天的真实价格（时间序列的最后一步）
+                last_price = tx[:, 0, :, -1] * scale 
+                
+                # 计算涨跌差分
+                diff_pred = (output * scale) - last_price
+                diff_true = (ty * scale) - last_price
+                
+                direction_product = diff_pred * diff_true
+                # 只对做错方向的施加惩罚
+                dir_loss = torch.sum(torch.relu(-direction_product))
+                
+                loss = base_loss + 1.0 * dir_loss
+            else:
+                loss = base_loss
             loss.backward()
             total_loss += loss.item()
             n_samples += (output.size(0) * data.m)
@@ -243,11 +272,11 @@ def main(run_id):
             epoch_start_time = time.time()
             train_loss = train(Data, Data.train[0], Data.train[1], model, criterion, optim, args.batch_size)
             
-            val_rse, val_rae, val_corr, val_mae, val_rmse, val_mape, val_r2 = evaluate(Data, Data.valid[0], Data.valid[1], model, evaluateL2, evaluateL1, args.batch_size)
+            val_rse, val_rae, val_corr, val_mae, val_rmse, val_mape, val_r2, val_da = evaluate(Data, Data.valid[0], Data.valid[1], model, evaluateL2, evaluateL1, args.batch_size)
             
             print(
-                '| end of epoch {:3d} | time: {:5.2f}s | loss {:5.4f} | rse {:5.4f} | mae {:5.4f} | rmse {:5.4f} | r2 {:5.4f}'.format(
-                    epoch, (time.time() - epoch_start_time), train_loss, val_rse, val_mae, val_rmse, val_r2), flush=True)
+                '| end of epoch {:3d} | time: {:5.2f}s | loss {:5.4f} | rse {:5.4f} | mae {:5.4f} | rmse {:5.4f} | r2 {:5.4f} | da {:5.4f}'.format(
+                    epoch, (time.time() - epoch_start_time), train_loss, val_rse, val_mae, val_rmse, val_r2, val_da), flush=True)
 
             if val_rse < best_val:
                 with open(args.save, 'wb') as f:
@@ -255,7 +284,7 @@ def main(run_id):
                 best_val = val_rse
                 
             if epoch % 5 == 0:
-                test_rse, test_rae, test_corr, test_mae, test_rmse, test_mape, test_r2 = evaluate(Data, Data.test[0], Data.test[1], model, evaluateL2, evaluateL1, args.batch_size)
+                test_rse, test_rae, test_corr, test_mae, test_rmse, test_mape, test_r2, test_da = evaluate(Data, Data.test[0], Data.test[1], model, evaluateL2, evaluateL1, args.batch_size)
 
     except KeyboardInterrupt:
         print('-' * 89)
@@ -265,24 +294,24 @@ def main(run_id):
     with open(args.save, 'rb') as f:
         model = torch.load(f)
 
-    test_rse, test_rae, test_corr, test_mae, test_rmse, test_mape, test_r2 = evaluate(Data, Data.test[0], Data.test[1], model, evaluateL2, evaluateL1, args.batch_size)
-    print(f"Run {run_id+1} Final Test: RSE {test_rse:.4f} | MAE {test_mae:.4f} | RMSE {test_rmse:.4f} | R2 {test_r2:.4f}")
+    test_rse, test_rae, test_corr, test_mae, test_rmse, test_mape, test_r2, test_da = evaluate(Data, Data.test[0], Data.test[1], model, evaluateL2, evaluateL1, args.batch_size)
+    print(f"Run {run_id+1} Final Test: RSE {test_rse:.4f} | MAE {test_mae:.4f} | RMSE {test_rmse:.4f} | R2 {test_r2:.4f} | DA {test_da:.4f}")
 
     # 打印学习到的融合权重
     if args.dual_graph == 1 and hasattr(model, 'fusion_weight'):
         print(f"Model Learned Fusion Weight: {model.fusion_weight.item():.4f}")
     
-    return test_rse, test_rae, test_corr, test_mae, test_rmse, test_mape, test_r2
+    return test_rse, test_rae, test_corr, test_mae, test_rmse, test_mape, test_r2, test_da
 
 if __name__ == "__main__":
     # 存储每次运行的结果
     results = {
         'rse': [], 'rae': [], 'corr': [], 
-        'mae': [], 'rmse': [], 'mape': [], 'r2': []
+        'mae': [], 'rmse': [], 'mape': [], 'r2': [], 'da': []
     }
     
     for i in range(args.runs):
-        rse, rae, corr, mae, rmse, mape, r2 = main(i)
+        rse, rae, corr, mae, rmse, mape, r2, da = main(i)
         results['rse'].append(rse)
         results['rae'].append(rae)
         results['corr'].append(corr)
@@ -290,14 +319,14 @@ if __name__ == "__main__":
         results['rmse'].append(rmse)
         results['mape'].append(mape)
         results['r2'].append(r2)
-        
+        results['da'].append(da)
     print('\n' + '='*50)
     print(f'Summary over {args.runs} runs')
     print('='*50)
     print(f"{'Metric':<10} | {'Mean':<10} | {'Std':<10}")
     print('-'*36)
     
-    for key in ['mae', 'rmse', 'mape', 'r2', 'rse', 'corr']:
+    for key in ['mae', 'rmse', 'mape', 'r2', 'rse', 'corr', 'da']:
         mean_val = np.mean(results[key])
         std_val = np.std(results[key])
         print(f"{key.upper():<10} | {mean_val:<10.4f} | {std_val:<10.4f}")
