@@ -3,12 +3,13 @@ import math
 from net import *
 import util
 class Trainer():
-    def __init__(self, model, lrate, wdecay, clip, step_size, seq_out_len, scaler, device, cl=True):
+    def __init__(self, model, lrate, wdecay, clip, step_size, seq_out_len, scaler, device, cl=True,use_dirloss=True):
         self.scaler = scaler
         self.model = model
         self.model.to(device)
         self.optimizer = optim.Adam(self.model.parameters(), lr=lrate, weight_decay=wdecay)
-        self.loss = util.masked_mae
+        self.base_loss = util.masked_mae # 基础损失函数
+        self.use_dir_loss = use_dirloss
         self.clip = clip
         self.step = step_size
         self.iter = 1
@@ -54,7 +55,23 @@ class Trainer():
         mape = util.masked_mape(predict,real,0.0).item()
         rmse = util.masked_rmse(predict,real,0.0).item()
         return loss.item(),mape,rmse
-
+    # 【修改点 3】: 新增联合 Loss 方法
+    def loss(self, predict, real, null_val):
+        loss_base = self.base_loss(predict, real, null_val)
+        
+        if self.use_dirloss and predict.shape[-1] > 1:
+            # 计算时序的涨跌差分
+            diff_pred = predict[..., 1:] - predict[..., :-1]
+            diff_true = real[..., 1:] - real[..., :-1]
+            
+            # 方向相反时，乘积为负数；取负号并用 ReLU 截断，只惩罚错误方向
+            direction_product = diff_pred * diff_true
+            loss_dir = torch.mean(torch.relu(-direction_product))
+            
+            # 联合 Loss (1.0 是权重系数，可调)
+            return loss_base + 1.0 * loss_dir 
+            
+        return loss_base
 
 
 class Optim(object):

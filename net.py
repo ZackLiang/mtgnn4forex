@@ -2,7 +2,7 @@ from layer import *
 
 
 class gtnet(nn.Module):
-    def __init__(self, gcn_true, buildA_true, gcn_depth, num_nodes, device, predefined_A=None, static_feat=None, dropout=0.3, subgraph_size=20, node_dim=40, dilation_exponential=1, conv_channels=32, residual_channels=32, skip_channels=64, end_channels=128, seq_length=12, in_dim=2, out_dim=12, layers=3, propalpha=0.05, tanhalpha=3, layer_norm_affline=True, revin=True, dual_graph=True):
+    def __init__(self, gcn_true, buildA_true, gcn_depth, num_nodes, device, predefined_A=None, static_feat=None, dropout=0.3, subgraph_size=20, node_dim=40, dilation_exponential=1, conv_channels=32, residual_channels=32, skip_channels=64, end_channels=128, seq_length=12, in_dim=2, out_dim=12, layers=3, propalpha=0.05, tanhalpha=3, layer_norm_affline=True, revin=True, dual_graph=True,use_router=True):
         super(gtnet, self).__init__()
         self.gcn_true = gcn_true
         self.buildA_true = buildA_true
@@ -26,6 +26,18 @@ class gtnet(nn.Module):
         self.revin_enabled = revin ##创新点1：是否启用 RevIN
         if self.revin_enabled:
             self.revin = RevIN(num_nodes, affine=True)
+        
+        self.use_router = use_router
+        if self.use_router:
+            # 一个极其轻量的感知机，吃入 stdev，吐出 0~1 的权重 alpha
+            self.router = nn.Sequential(
+                nn.Conv2d(in_dim, 16, kernel_size=(1, 1)),
+                nn.ReLU(),
+                nn.AdaptiveAvgPool2d((1, 1)), # 全局池化
+                nn.Flatten(),
+                nn.Linear(16, 1),
+                nn.Sigmoid() 
+            )
 
         # === 创新点 2: Dual Graph (新增) ===
         self.dual_graph = dual_graph
@@ -103,7 +115,16 @@ class gtnet(nn.Module):
         assert seq_len==self.seq_length, 'input sequence length not equal to preset sequence length'
 
         if self.revin_enabled:
-            input = self.revin(input, 'norm')##创新点1：归一化
+            # 【修改点 3】: 接收 stdev
+            input, stdev = self.revin(input, 'norm')
+        else:
+            stdev = None
+        # 【修改点 4】: 计算当前的体制权重 alpha
+        if self.use_router and stdev is not None:
+            alpha = self.router(stdev) 
+            alpha = alpha.view(-1, 1, 1, 1) # 扩展维度，准备和图特征相乘
+        else:
+            alpha = None
 
         if self.seq_length<self.receptive_field:
             input = nn.functional.pad(input,(self.receptive_field-self.seq_length,0,0,0))
@@ -140,14 +161,14 @@ class gtnet(nn.Module):
                 # 2. 计算静态图结果 (New)
                 # 只有当开关开启，且确实传进来了图，才计算
                 if self.dual_graph and (self.predefined_A is not None):
-                    # 【重要】我们复用 gconv 的权重 (Weight Sharing)
-                    # 这样参数量不增加，不易过拟合
                     x_static = self.gconv1[i](x, self.predefined_A) + self.gconv2[i](x, self.predefined_A.transpose(1,0))
                     
-                    # 3. 融合：这里直接相加 (Add)，你也可以改成加权平均
-                    x = x_dynamic + self.fusion_weight * x_static
+                    # 【修改点 5】: 动态路由融合
+                    if self.use_router and alpha is not None:
+                        x = alpha * x_dynamic + (1.0 - alpha) * x_static
+                    else:
+                        x = x_dynamic + self.fusion_weight * x_static
                 else:
-                    # 没开双图，就只用动态图
                     x = x_dynamic
             else:
                 x = self.residual_convs[i](x)

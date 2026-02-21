@@ -66,6 +66,9 @@ parser.add_argument('--num_split',type=int,default=1,help='number of splits for 
 
 parser.add_argument('--runs',type=int,default=10,help='number of runs')
 
+parser.add_argument('--use_router', type=str_to_bool, default=True, help='use Regime MoE router')
+parser.add_argument('--use_dirloss', type=str_to_bool, default=True, help='use Directional Loss')
+
 
 
 args = parser.parse_args()
@@ -99,14 +102,14 @@ def main(runid):
                   conv_channels=args.conv_channels, residual_channels=args.residual_channels,
                   skip_channels=args.skip_channels, end_channels= args.end_channels,
                   seq_length=args.seq_in_len, in_dim=args.in_dim, out_dim=args.seq_out_len,
-                  layers=args.layers, propalpha=args.propalpha, tanhalpha=args.tanhalpha, layer_norm_affline=True)
+                  layers=args.layers, propalpha=args.propalpha, tanhalpha=args.tanhalpha, layer_norm_affline=True,use_router=args.use_router)
 
     print(args)
     print('The recpetive field size is', model.receptive_field)
     nParams = sum([p.nelement() for p in model.parameters()])
     print('Number of model parameters is', nParams)
 
-    engine = Trainer(model, args.learning_rate, args.weight_decay, args.clip, args.step_size1, args.seq_out_len, scaler, device, args.cl)
+    engine = Trainer(model, args.learning_rate, args.weight_decay, args.clip, args.step_size1, args.seq_out_len, scaler, device, args.cl,use_dirloss=args.use_dirloss)
 
     print("start training...",flush=True)
     his_loss =[]

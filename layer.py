@@ -349,9 +349,11 @@ class RevIN(nn.Module):
         if mode == 'norm':
             self._get_statistics(x)
             x = self._normalize(x)
+            # 返回归一化后的数据和波动率 stdev
+            return x, self.stdev
         elif mode == 'denorm':
             x = self._denormalize(x, target_idx)
-        return x
+            return x
 
     def _get_statistics(self, x):
         # x shape: (Batch, In_Dim, Nodes, Seq_Len)
