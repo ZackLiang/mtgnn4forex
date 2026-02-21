@@ -9,7 +9,7 @@ class Trainer():
         self.model.to(device)
         self.optimizer = optim.Adam(self.model.parameters(), lr=lrate, weight_decay=wdecay)
         self.base_loss = util.masked_mae # 基础损失函数
-        self.use_dir_loss = use_dirloss
+        self.use_dirloss = use_dirloss
         self.clip = clip
         self.step = step_size
         self.iter = 1
