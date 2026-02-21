@@ -167,6 +167,8 @@ parser.add_argument('--step_size',type=int,default=100,help='step_size')
 parser.add_argument('--revin', type=int, default=1, help='1 to use RevIN, 0 to disable')
 parser.add_argument('--dual_graph', type=int, default=1, help='1 to use Dual Graph, 0 to disable')
 parser.add_argument('--adj_data', type=str, default='./data/sensor_graph/adj_mx.pkl', help='path to static graph')
+parser.add_argument('--use_router', type=int, default=1, help='1 to use Router, 0 to disable')
+parser.add_argument('--use_dirloss', type=int, default=1, help='1 to use DirLoss, 0 to disable')
 # 新增 runs 参数
 parser.add_argument('--runs', type=int, default=10, help='number of runs to average')
 
