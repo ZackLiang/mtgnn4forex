@@ -143,7 +143,7 @@ def train(data, X, Y, model, criterion, optim, batch_size):
                 # 只对做错方向的施加惩罚
                 dir_loss = torch.sum(torch.relu(-direction_product))
                 
-                loss = base_loss + 1.0 * dir_loss
+                loss = base_loss + args.dir_weight * dir_loss
             else:
                 loss = base_loss
             loss.backward()
@@ -198,6 +198,7 @@ parser.add_argument('--dual_graph', type=int, default=1, help='1 to use Dual Gra
 parser.add_argument('--adj_data', type=str, default='./data/sensor_graph/adj_mx.pkl', help='path to static graph')
 parser.add_argument('--use_router', type=int, default=1, help='1 to use Router, 0 to disable')
 parser.add_argument('--use_dirloss', type=int, default=1, help='1 to use DirLoss, 0 to disable')
+parser.add_argument('--dir_weight', type=float, default=1.0, help='Weight lambda for Directional Loss')
 # 新增 runs 参数
 parser.add_argument('--runs', type=int, default=10, help='number of runs to average')
 

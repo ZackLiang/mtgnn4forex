@@ -1,0 +1,63 @@
+Using specified device: mps
+
+>>> Run 1/5 Begin Training...
+iter:  0 | loss: 111.577
+iter:100 | loss: 4.104
+iter:200 | loss: 2.897
+iter:300 | loss: 2.278
+iter:400 | loss: 2.290
+iter:500 | loss: 2.136
+iter:600 | loss: 2.310
+iter:700 | loss: 1.963
+iter:800 | loss: 1.927
+| end of epoch   1 | time: 105.83s | loss 3.8502 | rse 0.0088 | mae 0.7731 | rmse 3.7072 | r2 0.8944 | da 0.3628
+iter:  0 | loss: 1.716
+iter:100 | loss: 1.741
+iter:200 | loss: 1.943
+iter:300 | loss: 1.356
+iter:400 | loss: 1.733
+iter:500 | loss: 1.619
+iter:600 | loss: 1.649
+iter:700 | loss: 1.152
+iter:800 | loss: 2.110
+| end of epoch   2 | time: 106.29s | loss 1.5216 | rse 0.0145 | mae 1.4305 | rmse 6.1187 | r2 0.5764 | da 0.3617
+iter:  0 | loss: 1.697
+iter:100 | loss: 1.122
+iter:200 | loss: 1.194
+iter:300 | loss: 1.369
+iter:400 | loss: 1.423
+iter:500 | loss: 1.212
+iter:600 | loss: 1.080
+iter:700 | loss: 1.164
+iter:800 | loss: 1.309
+| end of epoch   3 | time: 106.31s | loss 1.2361 | rse 0.0075 | mae 0.6361 | rmse 3.1694 | r2 0.9217 | da 0.3660
+iter:  0 | loss: 1.007
+iter:100 | loss: 0.937
+iter:200 | loss: 1.138
+iter:300 | loss: 1.455
+iter:400 | loss: 1.082
+iter:500 | loss: 0.917
+iter:600 | loss: 0.969
+iter:700 | loss: 0.871
+iter:800 | loss: 1.077
+| end of epoch   4 | time: 104.97s | loss 1.0699 | rse 0.0093 | mae 0.8344 | rmse 3.9270 | r2 0.8902 | da 0.3606
+iter:  0 | loss: 1.086
+iter:100 | loss: 1.125
+iter:200 | loss: 0.966
+iter:300 | loss: 0.802
+iter:400 | loss: 0.884
+iter:500 | loss: 0.863
+iter:600 | loss: 0.882
+iter:700 | loss: 0.700
+iter:800 | loss: 0.945
+| end of epoch   5 | time: 104.14s | loss 0.9903 | rse 0.0094 | mae 0.8923 | rmse 3.9447 | r2 0.8107 | da 0.3633
+iter:  0 | loss: 1.095
+iter:100 | loss: 0.832
+iter:200 | loss: 0.930
+iter:300 | loss: 0.978
+iter:400 | loss: 0.858
+iter:500 | loss: 0.722
+iter:600 | loss: 0.776
+iter:700 | loss: 0.890
+iter:800 | loss: 0.745
+| end of epoch   6 | time: 105.38s | loss 0.8890 | rse 0.0069 | mae 0.6110 | rmse 2.9066 | r2 0.9127 | da 0.3656
