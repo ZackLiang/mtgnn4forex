@@ -68,6 +68,8 @@ parser.add_argument('--runs',type=int,default=10,help='number of runs')
 
 parser.add_argument('--use_router', type=str_to_bool, default=True, help='use Regime MoE router')
 parser.add_argument('--use_dirloss', type=str_to_bool, default=True, help='use Directional Loss')
+parser.add_argument('--revin', type=str_to_bool, default=True, help='use RevIN')
+parser.add_argument('--dual_graph', type=str_to_bool, default=True, help='use Dual Graph')
 
 
 
@@ -102,7 +104,7 @@ def main(runid):
                   conv_channels=args.conv_channels, residual_channels=args.residual_channels,
                   skip_channels=args.skip_channels, end_channels= args.end_channels,
                   seq_length=args.seq_in_len, in_dim=args.in_dim, out_dim=args.seq_out_len,
-                  layers=args.layers, propalpha=args.propalpha, tanhalpha=args.tanhalpha, layer_norm_affline=True,use_router=args.use_router)
+                  layers=args.layers, propalpha=args.propalpha, tanhalpha=args.tanhalpha, layer_norm_affline=True,revin=args.revin, dual_graph=args.dual_graph, use_router=args.use_router)
 
     print(args)
     print('The recpetive field size is', model.receptive_field)
