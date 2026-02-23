@@ -230,15 +230,26 @@ def main(run_id):
     # Data Loader 初始化
     Data = DataLoaderS(args.data, 0.6, 0.2, device, args.horizon, args.seq_in_len, args.normalize)
 
-    # === 创新点2：加载静态图代码开始 ===
+# === 创新点2：加载静态图代码开始 ===
     predefined_A = None
     if args.dual_graph == 1:
         print(f"Loading static graph from: {args.adj_data}")
         try:
             with open(args.adj_data, 'rb') as f:
                 adj_mx = pickle.load(f)
-            # 转为 Tensor 并送到 GPU (确保是 float32)
+            
+            # 1. 转为 Tensor 并送到 GPU
             predefined_A = torch.tensor(adj_mx, dtype=torch.float32).to(device)
+            
+            # 2. 【终极工程修复】：强制行归一化 (Row Normalization)
+            # 计算每行的和，并防止除以0
+            row_sums = predefined_A.sum(dim=1, keepdim=True)
+            row_sums[row_sums == 0] = 1.0 
+            
+            # 将图矩阵除以行和，保证每行权重相加为1，彻底杜绝特征爆炸！
+            predefined_A = predefined_A / row_sums
+            
+            print("Static graph loaded and normalized successfully.")
         except Exception as e:
             print(f"Failed to load static graph: {e}")
             print("Fallback: Dual Graph will be disabled (predefined_A=None).")
