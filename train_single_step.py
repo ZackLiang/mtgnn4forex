@@ -132,18 +132,22 @@ def train(data, X, Y, model, criterion, optim, batch_size):
             # DA损失函数
             base_loss = criterion(output * scale, ty * scale)
             if args.use_dirloss == 1:
-                # 【修改点】：在归一化空间计算，去除 * scale，防止日元/欧元量级差异导致梯度爆炸
-                last_price_norm = tx[:, 0, :, -1] 
+                # 1. 取出今天真实的收盘价 (带 scale 的真实空间)
+                last_price = tx[:, 0, :, -1] * scale 
                 
-                # 计算归一化空间的涨跌差分
-                diff_pred_norm = output - last_price_norm
-                diff_true_norm = ty - last_price_norm
+                # 2. 计算真实空间的涨跌差分
+                diff_pred = (output * scale) - last_price
+                diff_true = (ty * scale) - last_price
                 
-                direction_product = diff_pred_norm * diff_true_norm
-                # 只对做错方向的施加惩罚
-                dir_loss = torch.sum(torch.relu(-direction_product))
+                # 3. 核心：生成“方向做错”的掩码矩阵 (方向相反为 1，方向相同为 0)
+                # 使用 detach() 防止 Mask 阻断梯度反传
+                wrong_dir_mask = (diff_pred * diff_true < 0).float().detach()
                 
-                # Dir_weight 建议设为 0.1 或 0.5 之间
+                # 4. 终极惩罚：对做错方向的样本，直接施加与其真实 L1 误差等比的额外惩罚！
+                # 保证 dir_loss 和 base_loss 永远在绝对相同的量级和空间！
+                dir_loss = torch.sum(wrong_dir_mask * torch.abs((output * scale) - (ty * scale)))
+                
+                # 建议在 run_ablation.sh 中把 dir_weight 设为 0.5 到 1.0 之间
                 loss = base_loss + args.dir_weight * dir_loss
             else:
                 loss = base_loss
