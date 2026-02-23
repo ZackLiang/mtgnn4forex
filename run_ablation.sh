@@ -12,9 +12,9 @@ echo "🚀 开始执行 Regime-MoE-GNN 自动消融实验"
 echo "=================================================="
 
 # 1. 跑 M0 (Baseline)
-# echo "[1/5] 正在运行 M0: 原版 MTGNN (Baseline)..."
-# python train_single_step.py --data $DATA_PATH --num_nodes $NODES --epochs $EPOCHS --runs $RUNS --device $DEVICE --save ./model/model_M0.pt --revin 0 --dual_graph 0 --use_router 0 --use_dirloss 0 > log_M0_baseline.txt 2>&1
-# echo "✅ M0 运行完毕，日志已保存至 log_M0_baseline.txt"
+echo "[1/5] 正在运行 M0: 原版 MTGNN (Baseline)..."
+python train_single_step.py --data $DATA_PATH --num_nodes $NODES --epochs $EPOCHS --runs $RUNS --device $DEVICE --save ./model/model_M0.pt --revin 0 --dual_graph 0 --use_router 0 --use_dirloss 0 > log_M0_baseline.txt 2>&1
+echo "✅ M0 运行完毕，日志已保存至 log_M0_baseline.txt"
 
 # 2. 跑 M1 (+ RevIN)
 echo "[2/5] 正在运行 M1: MTGNN + RevIN..."
