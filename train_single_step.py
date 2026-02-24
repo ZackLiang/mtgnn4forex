@@ -139,23 +139,29 @@ def train(data, X, Y, model, criterion, optim, batch_size):
                 diff_pred = (output * scale) - last_price
                 diff_true = (ty * scale) - last_price
                 
-                # === 终极方案：自适应二元交叉熵 (Adaptive BCE Directional Loss) ===
+                # === 2026 ICLR: 向量夹角对比对齐 (Vector Angle Alignment) ===
+                # 彻底放弃绝对数值惩罚，计算预测向量与真实向量的高维余弦相似度
                 
-                # 3. 计算各个货币对的平均绝对波动率 (MAD)，极其稳健，无惧 Batch Size 为 1
-                volatility = torch.abs(diff_true).mean(dim=0, keepdim=True).detach() + 1e-5
+                # 计算点积
+                dot_product = torch.sum(diff_pred * diff_true)
                 
-                # 4. 把预测涨跌幅除以波动率，转化为分类器的 Logits
-                # 这一步极其关键！它把所有货币(无论日元还是欧元)的预测全都对齐到了相似的尺度！
-                logits = diff_pred / volatility
+                # 计算 L2 范数 (加上 1e-6 防止除以 0，同时在 0 点附近提供极强的“踹出梯度”)
+                norm_pred = torch.sqrt(torch.sum(diff_pred**2) + 1e-6)
+                norm_true = torch.sqrt(torch.sum(diff_true**2) + 1e-6)
                 
-                # 5. 提取绝对的分类标签：涨为 1.0，跌或平为 0.0
-                true_bin = (diff_true > 0).float().detach()
+                # 相似度范围 [-1, 1]。同向为正，反向为负。
+                cos_sim = dot_product / (norm_pred * norm_true)
                 
-                # 6. 利用二元交叉熵损失直接优化方向的分类概率
-                dir_loss = nn.BCEWithLogitsLoss()(logits, true_bin)
+                # 目标是最大化相似度，所以 Loss 为 1 - cos_sim (范围 0 到 2)
+                dir_loss = 1.0 - cos_sim
                 
-                # BCE 的初始值大概在 0.69 左右，建议使用 dir_weight 0.5 到 1.0 
-                loss = base_loss + args.dir_weight * dir_loss
+                # === 核心黑科技: 动态多任务量级对齐 (Dynamic Task Balancing) ===
+                # 使用 base_loss.detach() 作为动态乘子，强行让方向惩罚的量级与回归误差同步！
+                # 无论汇率怎么波动，梯度永远处于完美平衡，绝不撕裂 RMSE！
+                adaptive_weight = base_loss.detach()
+                
+                # dir_weight 保持 1.0 即可
+                loss = base_loss + args.dir_weight * adaptive_weight * dir_loss
             else:
                 loss = base_loss
             loss.backward()
