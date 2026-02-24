@@ -122,6 +122,7 @@ class gtnet(nn.Module):
         # 【修改点 4】: 计算当前的体制权重 alpha
         if self.use_router and stdev is not None:
             alpha = self.router(stdev) 
+            self.last_alpha = alpha.detach().cpu().numpy()
             alpha = alpha.view(-1, 1, 1, 1) # 扩展维度，准备和图特征相乘
         else:
             alpha = None
@@ -136,6 +137,7 @@ class gtnet(nn.Module):
                     adp_learned= self.gc(self.idx)
                 else:
                     adp_learned= self.gc(idx)
+                self.last_adp = adp_learned.detach().cpu().numpy()
             else:
                 adp_learned = self.predefined_A
 
