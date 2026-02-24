@@ -33,7 +33,7 @@ echo "✅ M3 运行完毕，日志已保存至 log_M3_router.txt"
 
 # 5. 跑 M4 (+ RevIN + 静态双图 + 动态路由 + 方向性Loss)
 echo "[5/5] 正在运行 M4: Ours 完全体 (+ DirLoss)..."
-python train_single_step.py --data $DATA_PATH --num_nodes $NODES --epochs $EPOCHS --runs $RUNS --device $DEVICE --save ./model/model_M4.pt --revin 1 --dual_graph 1 --use_router 1 --use_dirloss 1 --dir_weight 0.1 --adj_data ./data/sensor_graph/adj_mx.pkl > log_M4_ours.txt 2>&1
+python train_single_step.py --data $DATA_PATH --num_nodes $NODES --epochs $EPOCHS --runs $RUNS --device $DEVICE --save ./model/model_M4.pt --revin 1 --dual_graph 1 --use_router 1 --use_dirloss 1 --dir_weight 2.0 --adj_data ./data/sensor_graph/adj_mx.pkl > log_M4_ours.txt 2>&1
 echo "✅ M4 运行完毕，日志已保存至 log_M4_ours.txt"
 
 echo "=================================================="

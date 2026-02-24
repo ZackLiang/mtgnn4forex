@@ -36,7 +36,7 @@ class gtnet(nn.Module):
                 nn.AdaptiveAvgPool2d((1, 1)), # 全局池化
                 nn.Flatten(),
                 nn.Linear(16, 1),
-                nn.Sigmoid() 
+                # nn.Sigmoid() 
             )
 
         # === 创新点 2: Dual Graph (新增) ===
@@ -121,7 +121,15 @@ class gtnet(nn.Module):
             stdev = None
         # 【修改点 4】: 计算当前的体制权重 alpha
         if self.use_router and stdev is not None:
-            alpha = self.router(stdev) 
+            # 1. 拿到原始的实数输出 (logits)
+            raw_alpha = self.router(stdev) 
+            
+            # 2. 引入温度缩放 (Temperature Scaling) 
+            # 作用：拉伸数值，防止软路由在 0.5 附近发生塌陷
+            temperature = 0.1
+            alpha = torch.sigmoid(raw_alpha / temperature)
+            
+            # 3. 截获画图用的权重，并扩展维度
             self.last_alpha = alpha.detach().cpu().numpy()
             alpha = alpha.view(-1, 1, 1, 1) # 扩展维度，准备和图特征相乘
         else:
