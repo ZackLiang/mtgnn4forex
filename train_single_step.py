@@ -139,15 +139,22 @@ def train(data, X, Y, model, criterion, optim, batch_size):
                 diff_pred = (output * scale) - last_price
                 diff_true = (ty * scale) - last_price
                 
-                # 3. 核心：生成“方向做错”的掩码矩阵 (方向相反为 1，方向相同为 0)
-                # 使用 detach() 防止 Mask 阻断梯度反传
-                wrong_dir_mask = (diff_pred * diff_true < 0).float().detach()
+                # === 终极方案：自适应二元交叉熵 (Adaptive BCE Directional Loss) ===
                 
-                # 4. 终极惩罚：对做错方向的样本，直接施加与其真实 L1 误差等比的额外惩罚！
-                # 保证 dir_loss 和 base_loss 永远在绝对相同的量级和空间！
-                dir_loss = torch.sum(wrong_dir_mask * torch.abs((output * scale) - (ty * scale)))
+                # 3. 计算各个货币对的平均绝对波动率 (MAD)，极其稳健，无惧 Batch Size 为 1
+                volatility = torch.abs(diff_true).mean(dim=0, keepdim=True).detach() + 1e-5
                 
-                # 建议在 run_ablation.sh 中把 dir_weight 设为 0.5 到 1.0 之间
+                # 4. 把预测涨跌幅除以波动率，转化为分类器的 Logits
+                # 这一步极其关键！它把所有货币(无论日元还是欧元)的预测全都对齐到了相似的尺度！
+                logits = diff_pred / volatility
+                
+                # 5. 提取绝对的分类标签：涨为 1.0，跌或平为 0.0
+                true_bin = (diff_true > 0).float().detach()
+                
+                # 6. 利用二元交叉熵损失直接优化方向的分类概率
+                dir_loss = nn.BCEWithLogitsLoss()(logits, true_bin)
+                
+                # BCE 的初始值大概在 0.69 左右，建议使用 dir_weight 0.5 到 1.0 
                 loss = base_loss + args.dir_weight * dir_loss
             else:
                 loss = base_loss
