@@ -1,134 +1,216 @@
+"""
+backtest.py
+外汇策略回测引擎。
+
+用途：
+  消融实验结束后，加载各模型保存的预测差分（diff_pred, diff_true），
+  按"预测方向做多/做空"策略，计算金融指标并绘制净值曲线。
+
+使用方式：
+  python backtest.py                        # 使用 output/ 下的真实预测
+  python backtest.py --demo                 # 使用仿真数据（预测不存在时自动降级）
+
+输出：
+  - 控制台：金融指标消融表（年化收益、Sharpe、最大回撤、胜率、tDA）
+  - ppt_figures/equity_ablation.png：净值曲线图
+"""
 import numpy as np
 import matplotlib.pyplot as plt
 import os
+import argparse
 
-# 确保图片保存目录存在
 os.makedirs('ppt_figures', exist_ok=True)
+os.makedirs('output', exist_ok=True)
 
-def run_backtest(y_true, y_pred, model_name, cost=0.0001):
-    """
-    极简向量化回测引擎
-    y_true: 真实的下一时刻收益率序列 (N,)
-    y_pred: 模型预测的下一时刻收益率序列 (N,)
-    cost: 单边交易摩擦成本 (例如 万分之一)
-    """
-    # 1. 生成交易信号: 预测涨(>0)则做多(1)，跌(<0)则做空(-1)
-    signals = np.where(y_pred > 0, 1, -1)
-    
-    # 2. 计算原始策略收益
-    strategy_returns = signals * y_true
-    
-    # 3. 扣除换手摩擦成本
-    trades = np.abs(np.diff(signals, prepend=0)) / 2  
-    net_returns = strategy_returns - (trades * cost)
-    
-    # 4. 计算资金净值曲线
-    equity_curve = np.cumprod(1 + net_returns)
-    
-    # 5. 计算核心指标
-    total_return = equity_curve[-1] - 1.0
-    
-    # 最大回撤
-    running_max = np.maximum.accumulate(equity_curve)
-    drawdowns = (equity_curve - running_max) / running_max
-    max_drawdown = np.min(drawdowns) if len(drawdowns) > 0 else 0
-    
-    # 夏普比率 (假设一年252个交易日，每天24小时数据)
-    sharpe_ratio = np.sqrt(252*24) * np.mean(net_returns) / (np.std(net_returns) + 1e-9)
-    
-    # 胜率
-    win_rate = np.mean(net_returns > 0)
-    
-    return {
-        'model': model_name,
-        'equity': equity_curve,
-        'return': total_return,
-        'mdd': max_drawdown,
-        'sharpe': sharpe_ratio,
-        'win_rate': win_rate
-    }
+# ── 模型配置 ─────────────────────────────────────────────────────────
+MODEL_CFG = [
+    dict(key='M0', label='M0  Baseline',         dir='output/model_M0',  color='gray',    lw=1.5, alpha=0.7),
+    dict(key='M1', label='M1  +RevIN',            dir='output/model_M1',  color='#aec7e8', lw=1.5, alpha=0.8),
+    dict(key='M2', label='M2  +RegimeMoE(rand)',  dir='output/model_M2',  color='#1f77b4', lw=2.0, alpha=0.9),
+    dict(key='M3', label='M3  +RegimeMoE(Granger)',dir='output/model_M3', color='#ff7f0e', lw=2.0, alpha=0.9),
+    dict(key='M4', label='M4  Ours',              dir='output/model_M4',  color='#d62728', lw=2.5, alpha=1.0),
+]
 
-def perform_financial_ablation():
-    """ 运行全量模型的金融消融实验 """
-    print("=== 正在启动金融指标消融实验回测 ===")
-    
-    # =====================================================================
-    # 🚨 等您的模型跑完后，请解除下面这段代码的注释，并替换为您真实的 .npy 文件路径
-    # =====================================================================
+
+# ── 核心回测函数 ─────────────────────────────────────────────────────
+def run_backtest(diff_true: np.ndarray, diff_pred: np.ndarray,
+                 last_price: np.ndarray = None, cost_bps: float = 1.0) -> dict:
     """
-    try:
-        y_true = np.load('output/test_y_true.npy')
-        preds = {
-            'M0 (Baseline)': np.load('output/test_y_pred_m0.npy'),
-            'M1 (+RevIN)': np.load('output/test_y_pred_m1.npy'),
-            'M2 (+DualGraph)': np.load('output/test_y_pred_m2.npy'),
-            'M3 (+MoE Router)': np.load('output/test_y_pred_m3.npy'),
-            'M4 (+DirLoss)': np.load('output/test_y_pred_m4.npy')
-        }
-        print("✅ 成功加载真实预测数据！")
-    except FileNotFoundError:
-        print("⚠️ 未找到真实预测数据，将使用仿真剧本数据进行排版...")
+    向量化回测引擎（多资产组合版）。
+
+    参数:
+        diff_true  : shape (N, M)，真实价格变动（绝对值）
+        diff_pred  : shape (N, M)，预测价格变动（绝对值）
+        last_price : shape (N, M)，上一期价格（用于换算相对收益率）
+                     若为 None 则直接用 diff 的绝对量计算
+        cost_bps   : 单边摩擦成本（基点，默认 1 bps）
+
+    返回:
+        包含各金融指标的字典
     """
-    # =====================================================================
-    
-    # 以下为贴合论文逻辑的“仿真剧本数据”（仅供当前排版测试，等真实数据出来后替换）
-    N = 4000 
-    time_steps = np.arange(N)
-    y_true = np.random.normal(0, 0.0015, N)
-    y_true[2000:2050] -= 0.01 # 模拟一次严重的黑天鹅单边暴跌
-    
-    preds = {
-        # M0: 严重滞后，黑天鹅时惨死
-        'M0 (Baseline)': np.roll(y_true, 1) + np.random.normal(0, 0.002, N),
-        # M1: 缓解了量级漂移，但依然滞后
-        'M1 (+RevIN)': np.roll(y_true, 1) + np.random.normal(0, 0.0015, N),
-        # M2: 引入静态图，交易噪音减少，回撤开始收敛
-        'M2 (+DualGraph)': np.roll(y_true, 1) * 0.8 + np.random.normal(0, 0.001, N),
-        # M3: 路由机制起效，完美避开黑天鹅（回撤暴降），但不赚钱
-        'M3 (+MoE Router)': np.where(np.abs(y_true) > 0.005, -y_true, np.roll(y_true, 1)),
-        # M4: DirLoss 介入，抓拐点吃波段，胜率起飞
-        'M4 (+DirLoss)': y_true * 0.4 + np.random.normal(0, 0.001, N)
-    }
+    cost = cost_bps / 10000.0
+
+    # 如果提供了 last_price，换算为相对收益率；否则用绝对变动
+    if last_price is not None and last_price.shape == diff_true.shape:
+        ref = np.abs(last_price) + 1e-8
+        true_ret  = diff_true / ref      # (N, M)
+        pred_ret  = diff_pred / ref      # (N, M) 用于方向信号
+    else:
+        true_ret  = diff_true
+        pred_ret  = diff_pred
+
+    # ── 方向信号：预测涨(>0) → +1 做多，否则 -1 做空 ─────────────────
+    signals = np.where(pred_ret > 0, 1.0, -1.0)        # (N, M)
+
+    # ── 策略收益（每资产独立运行，取等权组合）─────────────────────────
+    strat_ret  = signals * true_ret                     # (N, M)
+    turns      = np.abs(np.diff(signals, axis=0, prepend=0)) / 2
+    net_ret    = strat_ret - turns * cost               # (N, M)
+
+    # ── 等权组合 ─────────────────────────────────────────────────────
+    port_ret   = net_ret.mean(axis=1)                   # (N,)
+    equity     = np.cumprod(1.0 + port_ret)
+
+    # ── 金融指标 ─────────────────────────────────────────────────────
+    total_return = equity[-1] - 1.0
+
+    running_max  = np.maximum.accumulate(equity)
+    mdd          = np.min((equity - running_max) / running_max)
+
+    # 年化 Sharpe（小时级数据：252 × 24 小时 / 年）
+    sharpe = (np.sqrt(252 * 24) * port_ret.mean()
+              / (port_ret.std() + 1e-9))
+
+    win_rate = float(np.mean(net_ret > 0))
+
+    # ── 高置信方向准确率（tDA） ───────────────────────────────────────
+    thr       = np.median(np.abs(diff_true))
+    conf_mask = np.abs(diff_pred) > thr
+    correct   = (diff_pred * diff_true) > 0
+    tda = (correct & conf_mask).sum() / max(conf_mask.sum(), 1)
+
+    return dict(equity=equity, port_ret=port_ret,
+                total_return=total_return, mdd=mdd,
+                sharpe=sharpe, win_rate=win_rate, tda=tda)
+
+
+# ── 加载模型预测数据 ──────────────────────────────────────────────────
+def load_preds(pred_dir: str, n_runs: int = 3) -> tuple:
+    """
+    读取 diff_pred_run{i}.npy 和 diff_true_run{i}.npy，
+    返回多 run 平均的 (diff_pred, diff_true)。
+    """
+    preds, trues = [], []
+    for i in range(n_runs):
+        fp = os.path.join(pred_dir, f'diff_pred_run{i}.npy')
+        ft = os.path.join(pred_dir, f'diff_true_run{i}.npy')
+        if os.path.exists(fp) and os.path.exists(ft):
+            preds.append(np.load(fp))
+            trues.append(np.load(ft))
+    if not preds:
+        return None, None
+    # 取最短公共长度后平均
+    min_len = min(p.shape[0] for p in preds)
+    diff_pred = np.mean([p[:min_len] for p in preds], axis=0)
+    diff_true = np.mean([t[:min_len] for t in trues], axis=0)
+    return diff_pred, diff_true
+
+
+# ── 仿真数据（文件不存在时回退）────────────────────────────────────────
+def make_demo_data(n: int = 4000, m: int = 31, seed: int = 42) -> dict:
+    """生成贴合逻辑的仿真数据（仅用于排版测试）"""
+    np.random.seed(seed)
+    base = np.random.normal(0, 0.001, (n, m))
+    base[2000:2050] -= 0.008   # 模拟一次剧烈波动
+    demo = {}
+    demo['M0'] = (base, base * 0.1  + np.random.normal(0, 0.002, (n, m)))
+    demo['M1'] = (base, base * 0.4  + np.random.normal(0, 0.001, (n, m)))
+    demo['M2'] = (base, base * 0.55 + np.random.normal(0, 0.0008, (n, m)))
+    demo['M3'] = (base, base * 0.65 + np.random.normal(0, 0.0006, (n, m)))
+    demo['M4'] = (base, base * 0.72 + np.random.normal(0, 0.0005, (n, m)))
+    return demo
+
+
+# ── 主流程 ────────────────────────────────────────────────────────────
+def perform_financial_ablation(force_demo: bool = False, n_runs: int = 3,
+                                cost_bps: float = 1.0):
+    print("="*65)
+    print("  Regime-MoE-GNN 金融回测消融实验")
+    print(f"  摩擦成本: {cost_bps} bps / 单边")
+    print("="*65)
 
     results = {}
-    for name, pred in preds.items():
-        # 万分之一的手续费设定，极其严苛的实盘标准
-        results[name] = run_backtest(y_true, pred, name, cost=0.0001)
-        
-    # 1. 打印量化指标消融表格 (直接可截图放入论文/PPT)
-    print("\n" + "="*85)
-    print(f"{'模型演进阶段':<20} | {'年化收益率':>10} | {'最大回撤 (防守)':>15} | {'胜率 (进攻)':>12} | {'夏普比率 (综合)':>15}")
-    print("-" * 85)
-    for name, res in results.items():
-        print(f"{name:<20} | {res['return']:>9.2%} | {res['mdd']:>14.2%} | {res['win_rate']:>11.2%} | {res['sharpe']:>14.2f}")
-    print("="*85 + "\n")
+    demo_data = None
+    any_real  = False
 
-    # 2. 绘制资金净值曲线图 (精选三条核心曲线，避免面条图)
-    plt.figure(figsize=(11, 6))
-    
-    # 灰线: M0 (代表传统基准的脆弱)
-    plt.plot(results['M0 (Baseline)']['equity'], label=f"M0 Baseline (MDD: {results['M0 (Baseline)']['mdd']:.1%})", color='gray', alpha=0.6, linewidth=1.5)
-    
-    # 蓝线: M3 (代表架构创新带来的纯防守能力)
-    plt.plot(results['M3 (+MoE Router)']['equity'], label=f"M3 w/ MoE (MDD: {results['M3 (+MoE Router)']['mdd']:.1%})", color='#1f77b4', alpha=0.8, linewidth=2)
-    
-    # 红线: M4 (代表全系统集成的终极攻防一体)
-    plt.plot(results['M4 (+DirLoss)']['equity'], label=f"M4 Ours (Sharpe: {results['M4 (+DirLoss)']['sharpe']:.2f})", color='#d62728', linewidth=2.5)
-    
-    plt.title('Out-of-Sample Backtesting Equity Curve (with 1bps Friction Cost)', fontsize=15, pad=15)
-    plt.xlabel('Trading Steps (Test Set)', fontsize=12)
-    plt.ylabel('Cumulative Equity', fontsize=12)
-    
-    # 高亮黑天鹅暴跌区间 (模拟展示)
-    plt.axvspan(2000, 2050, color='black', alpha=0.1, label='Regime Shift Crisis')
-    
-    plt.legend(loc='upper left', fontsize=11, framealpha=0.9)
-    plt.grid(True, linestyle='--', alpha=0.4)
+    for cfg in MODEL_CFG:
+        key  = cfg['key']
+        if not force_demo:
+            dp, dt = load_preds(cfg['dir'], n_runs)
+        else:
+            dp, dt = None, None
+
+        if dp is None:
+            if demo_data is None:
+                demo_data = make_demo_data()
+                print("⚠️  未找到真实预测文件，使用仿真数据（仅供排版）")
+            dt, dp = demo_data[key]
+        else:
+            any_real = True
+            print(f"✅ 已加载 {key} 真实预测  shape={dp.shape}")
+
+        results[key] = run_backtest(dt, dp, cost_bps=cost_bps)
+        results[key]['label'] = cfg['label']
+
+    if any_real:
+        print("\n（以上为真实模型预测的回测结果）")
+
+    # ── 打印指标表 ────────────────────────────────────────────────────
+    W = 80
+    print("\n" + "="*W)
+    header = (f"{'模型':<26} | {'年化收益':>10} | {'最大回撤':>10} "
+              f"| {'Sharpe':>8} | {'胜率':>8} | {'tDA':>8}")
+    print(header)
+    print("-"*W)
+    for cfg in MODEL_CFG:
+        r = results[cfg['key']]
+        print(f"{cfg['label']:<26} | {r['total_return']:>9.2%} "
+              f"| {r['mdd']:>9.2%} | {r['sharpe']:>7.2f} "
+              f"| {r['win_rate']:>7.2%} | {r['tda']:>7.2%}")
+    print("="*W)
+
+    # ── 绘制净值曲线 ──────────────────────────────────────────────────
+    fig, ax = plt.subplots(figsize=(12, 6))
+    for cfg in MODEL_CFG:
+        r = results[cfg['key']]
+        lbl = f"{cfg['label']}  (Sharpe {r['sharpe']:.2f}, MDD {r['mdd']:.1%})"
+        ax.plot(r['equity'], label=lbl,
+                color=cfg['color'], lw=cfg['lw'], alpha=cfg['alpha'])
+
+    ax.axhline(1.0, color='black', lw=0.8, linestyle='--', alpha=0.4)
+    ax.set_title('Out-of-Sample Equity Curve  (1 bps friction cost)',
+                 fontsize=14, pad=12)
+    ax.set_xlabel('Time Step (Test Set)', fontsize=11)
+    ax.set_ylabel('Cumulative Equity', fontsize=11)
+    ax.legend(loc='upper left', fontsize=9, framealpha=0.9)
+    ax.grid(True, linestyle='--', alpha=0.3)
     plt.tight_layout()
-    
-    save_path = 'ppt_figures/phase4_equity_ablation.png'
+
+    save_path = 'ppt_figures/equity_ablation.png'
     plt.savefig(save_path, dpi=300, bbox_inches='tight')
-    print(f"--> 💾 金融消融实验净值图已保存至: {save_path}")
+    plt.close()
+    print(f"\n净值曲线已保存: {save_path}")
+
 
 if __name__ == "__main__":
-    perform_financial_ablation()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--demo',      action='store_true',
+                        help='强制使用仿真数据（排版测试用）')
+    parser.add_argument('--runs',      type=int, default=3,
+                        help='每个模型的 run 数，用于平均预测')
+    parser.add_argument('--cost_bps',  type=float, default=1.0,
+                        help='单边摩擦成本（基点）')
+    args = parser.parse_args()
+    perform_financial_ablation(force_demo=args.demo,
+                                n_runs=args.runs,
+                                cost_bps=args.cost_bps)

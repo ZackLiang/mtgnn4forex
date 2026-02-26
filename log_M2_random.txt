@@ -1,0 +1,786 @@
+Using specified device: mps
+Loading static graph from: ./data/sensor_graph/adj_random.pkl
+Static graph loaded and normalized successfully.
+
+>>> Run 1/3 Begin Training...
+iter:  0 | loss: 0.827
+iter:100 | loss: 0.167
+iter:200 | loss: 0.272
+iter:300 | loss: 0.179
+iter:400 | loss: 0.158
+iter:500 | loss: 0.188
+iter:600 | loss: 0.209
+iter:700 | loss: 0.178
+iter:800 | loss: 0.138
+| end of epoch   1 | time: 150.96s | loss 0.2066 | rse 0.0022 | mae 0.1468 | rmse 0.9210 | r2 0.9944 | da 0.3623 | tda 0.2774
+iter:  0 | loss: 0.185
+iter:100 | loss: 0.167
+iter:200 | loss: 0.178
+iter:300 | loss: 0.107
+iter:400 | loss: 0.199
+iter:500 | loss: 0.173
+iter:600 | loss: 0.144
+iter:700 | loss: 0.174
+iter:800 | loss: 0.170
+| end of epoch   2 | time: 149.72s | loss 0.1609 | rse 0.0022 | mae 0.1520 | rmse 0.9246 | r2 0.9943 | da 0.3587 | tda 0.2732
+iter:  0 | loss: 0.148
+iter:100 | loss: 0.136
+iter:200 | loss: 0.186
+iter:300 | loss: 0.134
+iter:400 | loss: 0.165
+iter:500 | loss: 0.129
+iter:600 | loss: 0.133
+iter:700 | loss: 0.150
+iter:800 | loss: 0.131
+| end of epoch   3 | time: 149.76s | loss 0.1536 | rse 0.0021 | mae 0.1390 | rmse 0.8887 | r2 0.9947 | da 0.3620 | tda 0.2702
+iter:  0 | loss: 0.150
+iter:100 | loss: 0.143
+iter:200 | loss: 0.126
+iter:300 | loss: 0.127
+iter:400 | loss: 0.139
+iter:500 | loss: 0.126
+iter:600 | loss: 0.135
+iter:700 | loss: 0.103
+iter:800 | loss: 0.147
+| end of epoch   4 | time: 149.72s | loss 0.1503 | rse 0.0021 | mae 0.1365 | rmse 0.8832 | r2 0.9948 | da 0.3564 | tda 0.2641
+iter:  0 | loss: 0.152
+iter:100 | loss: 0.130
+iter:200 | loss: 0.137
+iter:300 | loss: 0.113
+iter:400 | loss: 0.144
+iter:500 | loss: 0.112
+iter:600 | loss: 0.176
+iter:700 | loss: 0.135
+iter:800 | loss: 0.179
+| end of epoch   5 | time: 149.67s | loss 0.1486 | rse 0.0021 | mae 0.1341 | rmse 0.8766 | r2 0.9948 | da 0.3623 | tda 0.2680
+iter:  0 | loss: 0.140
+iter:100 | loss: 0.089
+iter:200 | loss: 0.171
+iter:300 | loss: 0.160
+iter:400 | loss: 0.119
+iter:500 | loss: 0.160
+iter:600 | loss: 0.114
+iter:700 | loss: 0.098
+iter:800 | loss: 0.215
+| end of epoch   6 | time: 149.69s | loss 0.1468 | rse 0.0021 | mae 0.1402 | rmse 0.8855 | r2 0.9947 | da 0.3547 | tda 0.2636
+iter:  0 | loss: 0.105
+iter:100 | loss: 0.124
+iter:200 | loss: 0.170
+iter:300 | loss: 0.134
+iter:400 | loss: 0.172
+iter:500 | loss: 0.102
+iter:600 | loss: 0.190
+iter:700 | loss: 0.121
+iter:800 | loss: 0.106
+| end of epoch   7 | time: 149.71s | loss 0.1460 | rse 0.0021 | mae 0.1325 | rmse 0.8753 | r2 0.9949 | da 0.3592 | tda 0.2646
+iter:  0 | loss: 0.086
+iter:100 | loss: 0.129
+iter:200 | loss: 0.154
+iter:300 | loss: 0.111
+iter:400 | loss: 0.134
+iter:500 | loss: 0.164
+iter:600 | loss: 0.101
+iter:700 | loss: 0.123
+iter:800 | loss: 0.164
+| end of epoch   8 | time: 149.58s | loss 0.1452 | rse 0.0021 | mae 0.1336 | rmse 0.8758 | r2 0.9949 | da 0.3585 | tda 0.2641
+iter:  0 | loss: 0.147
+iter:100 | loss: 0.155
+iter:200 | loss: 0.122
+iter:300 | loss: 0.127
+iter:400 | loss: 0.124
+iter:500 | loss: 0.195
+iter:600 | loss: 0.114
+iter:700 | loss: 0.166
+iter:800 | loss: 0.130
+| end of epoch   9 | time: 149.75s | loss 0.1445 | rse 0.0021 | mae 0.1334 | rmse 0.8739 | r2 0.9949 | da 0.3566 | tda 0.2591
+iter:  0 | loss: 0.180
+iter:100 | loss: 0.157
+iter:200 | loss: 0.142
+iter:300 | loss: 0.122
+iter:400 | loss: 0.147
+iter:500 | loss: 0.151
+iter:600 | loss: 0.145
+iter:700 | loss: 0.150
+iter:800 | loss: 0.172
+| end of epoch  10 | time: 149.80s | loss 0.1438 | rse 0.0021 | mae 0.1320 | rmse 0.8711 | r2 0.9949 | da 0.3639 | tda 0.2678
+iter:  0 | loss: 0.183
+iter:100 | loss: 0.126
+iter:200 | loss: 0.149
+iter:300 | loss: 0.146
+iter:400 | loss: 0.140
+iter:500 | loss: 0.118
+iter:600 | loss: 0.138
+iter:700 | loss: 0.172
+iter:800 | loss: 0.138
+| end of epoch  11 | time: 149.90s | loss 0.1436 | rse 0.0021 | mae 0.1333 | rmse 0.8744 | r2 0.9949 | da 0.3636 | tda 0.2673
+iter:  0 | loss: 0.175
+iter:100 | loss: 0.172
+iter:200 | loss: 0.149
+iter:300 | loss: 0.139
+iter:400 | loss: 0.113
+iter:500 | loss: 0.133
+iter:600 | loss: 0.218
+iter:700 | loss: 0.128
+iter:800 | loss: 0.104
+| end of epoch  12 | time: 149.87s | loss 0.1429 | rse 0.0021 | mae 0.1321 | rmse 0.8712 | r2 0.9949 | da 0.3587 | tda 0.2617
+iter:  0 | loss: 0.123
+iter:100 | loss: 0.104
+iter:200 | loss: 0.136
+iter:300 | loss: 0.143
+iter:400 | loss: 0.147
+iter:500 | loss: 0.128
+iter:600 | loss: 0.142
+iter:700 | loss: 0.224
+iter:800 | loss: 0.154
+| end of epoch  13 | time: 149.96s | loss 0.1426 | rse 0.0021 | mae 0.1347 | rmse 0.8738 | r2 0.9948 | da 0.3565 | tda 0.2605
+iter:  0 | loss: 0.118
+iter:100 | loss: 0.116
+iter:200 | loss: 0.162
+iter:300 | loss: 0.150
+iter:400 | loss: 0.187
+iter:500 | loss: 0.164
+iter:600 | loss: 0.170
+iter:700 | loss: 0.127
+iter:800 | loss: 0.133
+| end of epoch  14 | time: 149.73s | loss 0.1425 | rse 0.0021 | mae 0.1343 | rmse 0.8724 | r2 0.9948 | da 0.3592 | tda 0.2672
+iter:  0 | loss: 0.159
+iter:100 | loss: 0.179
+iter:200 | loss: 0.124
+iter:300 | loss: 0.128
+iter:400 | loss: 0.147
+iter:500 | loss: 0.116
+iter:600 | loss: 0.147
+iter:700 | loss: 0.160
+iter:800 | loss: 0.150
+| end of epoch  15 | time: 149.63s | loss 0.1423 | rse 0.0021 | mae 0.1340 | rmse 0.8733 | r2 0.9949 | da 0.3530 | tda 0.2563
+iter:  0 | loss: 0.130
+iter:100 | loss: 0.117
+iter:200 | loss: 0.104
+iter:300 | loss: 0.121
+iter:400 | loss: 0.131
+iter:500 | loss: 0.118
+iter:600 | loss: 0.138
+iter:700 | loss: 0.161
+iter:800 | loss: 0.201
+| end of epoch  16 | time: 149.64s | loss 0.1419 | rse 0.0021 | mae 0.1329 | rmse 0.8708 | r2 0.9949 | da 0.3621 | tda 0.2688
+iter:  0 | loss: 0.189
+iter:100 | loss: 0.111
+iter:200 | loss: 0.106
+iter:300 | loss: 0.183
+iter:400 | loss: 0.160
+iter:500 | loss: 0.154
+iter:600 | loss: 0.113
+iter:700 | loss: 0.154
+iter:800 | loss: 0.130
+| end of epoch  17 | time: 149.67s | loss 0.1412 | rse 0.0021 | mae 0.1375 | rmse 0.8767 | r2 0.9948 | da 0.3541 | tda 0.2588
+iter:  0 | loss: 0.156
+iter:100 | loss: 0.132
+iter:200 | loss: 0.126
+iter:300 | loss: 0.128
+iter:400 | loss: 0.150
+iter:500 | loss: 0.167
+iter:600 | loss: 0.113
+iter:700 | loss: 0.131
+iter:800 | loss: 0.193
+| end of epoch  18 | time: 149.68s | loss 0.1410 | rse 0.0021 | mae 0.1348 | rmse 0.8704 | r2 0.9948 | da 0.3574 | tda 0.2624
+iter:  0 | loss: 0.168
+iter:100 | loss: 0.099
+iter:200 | loss: 0.240
+iter:300 | loss: 0.148
+iter:400 | loss: 0.098
+iter:500 | loss: 0.115
+iter:600 | loss: 0.150
+iter:700 | loss: 0.129
+iter:800 | loss: 0.125
+| end of epoch  19 | time: 149.70s | loss 0.1405 | rse 0.0021 | mae 0.1330 | rmse 0.8731 | r2 0.9949 | da 0.3593 | tda 0.2643
+iter:  0 | loss: 0.129
+iter:100 | loss: 0.111
+iter:200 | loss: 0.118
+iter:300 | loss: 0.139
+iter:400 | loss: 0.172
+iter:500 | loss: 0.180
+iter:600 | loss: 0.120
+iter:700 | loss: 0.124
+iter:800 | loss: 0.158
+| end of epoch  20 | time: 149.69s | loss 0.1408 | rse 0.0021 | mae 0.1377 | rmse 0.8790 | r2 0.9949 | da 0.3584 | tda 0.2632
+iter:  0 | loss: 0.133
+iter:100 | loss: 0.170
+iter:200 | loss: 0.103
+iter:300 | loss: 0.143
+iter:400 | loss: 0.126
+iter:500 | loss: 0.118
+iter:600 | loss: 0.120
+iter:700 | loss: 0.148
+iter:800 | loss: 0.123
+| end of epoch  21 | time: 149.65s | loss 0.1404 | rse 0.0021 | mae 0.1373 | rmse 0.8768 | r2 0.9947 | da 0.3588 | tda 0.2706
+iter:  0 | loss: 0.133
+iter:100 | loss: 0.238
+iter:200 | loss: 0.202
+iter:300 | loss: 0.147
+iter:400 | loss: 0.139
+iter:500 | loss: 0.183
+iter:600 | loss: 0.141
+iter:700 | loss: 0.106
+iter:800 | loss: 0.105
+| end of epoch  22 | time: 149.73s | loss 0.1400 | rse 0.0021 | mae 0.1352 | rmse 0.8742 | r2 0.9948 | da 0.3532 | tda 0.2595
+iter:  0 | loss: 0.122
+iter:100 | loss: 0.156
+iter:200 | loss: 0.123
+iter:300 | loss: 0.123
+iter:400 | loss: 0.129
+iter:500 | loss: 0.119
+iter:600 | loss: 0.115
+iter:700 | loss: 0.101
+iter:800 | loss: 0.112
+| end of epoch  23 | time: 149.66s | loss 0.1399 | rse 0.0021 | mae 0.1361 | rmse 0.8742 | r2 0.9948 | da 0.3544 | tda 0.2637
+iter:  0 | loss: 0.174
+iter:100 | loss: 0.112
+iter:200 | loss: 0.161
+iter:300 | loss: 0.161
+iter:400 | loss: 0.160
+iter:500 | loss: 0.131
+iter:600 | loss: 0.105
+iter:700 | loss: 0.119
+iter:800 | loss: 0.124
+| end of epoch  24 | time: 149.67s | loss 0.1400 | rse 0.0021 | mae 0.1314 | rmse 0.8696 | r2 0.9949 | da 0.3575 | tda 0.2613
+iter:  0 | loss: 0.105
+iter:100 | loss: 0.192
+iter:200 | loss: 0.097
+iter:300 | loss: 0.099
+iter:400 | loss: 0.107
+iter:500 | loss: 0.131
+iter:600 | loss: 0.185
+iter:700 | loss: 0.151
+iter:800 | loss: 0.122
+| end of epoch  25 | time: 149.71s | loss 0.1392 | rse 0.0021 | mae 0.1363 | rmse 0.8758 | r2 0.9949 | da 0.3570 | tda 0.2610
+/Users/work/data4paper/MTGNN/train_single_step.py:342: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+  model = torch.load(f)
+Run 1 Final Test: RSE 0.0027 | MAE 0.1642 | RMSE 1.1577 | R2 0.9947 | DA 0.3612 | tDA 0.2661
+Model Learned Fusion Weight: 0.1000
+Loading static graph from: ./data/sensor_graph/adj_random.pkl
+Static graph loaded and normalized successfully.
+
+>>> Run 2/3 Begin Training...
+iter:  0 | loss: 0.760
+iter:100 | loss: 0.180
+iter:200 | loss: 0.180
+iter:300 | loss: 0.173
+iter:400 | loss: 0.195
+iter:500 | loss: 0.180
+iter:600 | loss: 0.243
+iter:700 | loss: 0.146
+iter:800 | loss: 0.224
+| end of epoch   1 | time: 149.80s | loss 0.2129 | rse 0.0022 | mae 0.1433 | rmse 0.9174 | r2 0.9945 | da 0.3591 | tda 0.2744
+iter:  0 | loss: 0.222
+iter:100 | loss: 0.177
+iter:200 | loss: 0.194
+iter:300 | loss: 0.140
+iter:400 | loss: 0.234
+iter:500 | loss: 0.133
+iter:600 | loss: 0.144
+iter:700 | loss: 0.180
+iter:800 | loss: 0.172
+| end of epoch   2 | time: 149.90s | loss 0.1599 | rse 0.0021 | mae 0.1367 | rmse 0.8922 | r2 0.9947 | da 0.3602 | tda 0.2716
+iter:  0 | loss: 0.116
+iter:100 | loss: 0.156
+iter:200 | loss: 0.169
+iter:300 | loss: 0.169
+iter:400 | loss: 0.141
+iter:500 | loss: 0.101
+iter:600 | loss: 0.188
+iter:700 | loss: 0.172
+iter:800 | loss: 0.149
+| end of epoch   3 | time: 150.08s | loss 0.1525 | rse 0.0021 | mae 0.1463 | rmse 0.8996 | r2 0.9945 | da 0.3596 | tda 0.2758
+iter:  0 | loss: 0.140
+iter:100 | loss: 0.179
+iter:200 | loss: 0.143
+iter:300 | loss: 0.131
+iter:400 | loss: 0.113
+iter:500 | loss: 0.207
+iter:600 | loss: 0.121
+iter:700 | loss: 0.142
+iter:800 | loss: 0.130
+| end of epoch   4 | time: 150.11s | loss 0.1490 | rse 0.0021 | mae 0.1357 | rmse 0.8826 | r2 0.9948 | da 0.3582 | tda 0.2648
+iter:  0 | loss: 0.114
+iter:100 | loss: 0.136
+iter:200 | loss: 0.188
+iter:300 | loss: 0.133
+iter:400 | loss: 0.134
+iter:500 | loss: 0.118
+iter:600 | loss: 0.115
+iter:700 | loss: 0.178
+iter:800 | loss: 0.164
+| end of epoch   5 | time: 149.99s | loss 0.1470 | rse 0.0021 | mae 0.1377 | rmse 0.8826 | r2 0.9948 | da 0.3590 | tda 0.2688
+iter:  0 | loss: 0.155
+iter:100 | loss: 0.143
+iter:200 | loss: 0.141
+iter:300 | loss: 0.220
+iter:400 | loss: 0.111
+iter:500 | loss: 0.122
+iter:600 | loss: 0.086
+iter:700 | loss: 0.152
+iter:800 | loss: 0.246
+| end of epoch   6 | time: 150.10s | loss 0.1455 | rse 0.0021 | mae 0.1351 | rmse 0.8787 | r2 0.9948 | da 0.3570 | tda 0.2650
+iter:  0 | loss: 0.119
+iter:100 | loss: 0.127
+iter:200 | loss: 0.154
+iter:300 | loss: 0.142
+iter:400 | loss: 0.144
+iter:500 | loss: 0.192
+iter:600 | loss: 0.161
+iter:700 | loss: 0.152
+iter:800 | loss: 0.119
+| end of epoch   7 | time: 150.08s | loss 0.1447 | rse 0.0021 | mae 0.1355 | rmse 0.8791 | r2 0.9949 | da 0.3617 | tda 0.2654
+iter:  0 | loss: 0.103
+iter:100 | loss: 0.117
+iter:200 | loss: 0.177
+iter:300 | loss: 0.122
+iter:400 | loss: 0.153
+iter:500 | loss: 0.129
+iter:600 | loss: 0.190
+iter:700 | loss: 0.213
+iter:800 | loss: 0.167
+| end of epoch   8 | time: 150.00s | loss 0.1439 | rse 0.0021 | mae 0.1360 | rmse 0.8768 | r2 0.9948 | da 0.3575 | tda 0.2623
+iter:  0 | loss: 0.124
+iter:100 | loss: 0.147
+iter:200 | loss: 0.128
+iter:300 | loss: 0.132
+iter:400 | loss: 0.168
+iter:500 | loss: 0.105
+iter:600 | loss: 0.166
+iter:700 | loss: 0.141
+iter:800 | loss: 0.139
+| end of epoch   9 | time: 149.92s | loss 0.1436 | rse 0.0021 | mae 0.1327 | rmse 0.8746 | r2 0.9949 | da 0.3589 | tda 0.2608
+iter:  0 | loss: 0.191
+iter:100 | loss: 0.130
+iter:200 | loss: 0.127
+iter:300 | loss: 0.161
+iter:400 | loss: 0.090
+iter:500 | loss: 0.153
+iter:600 | loss: 0.086
+iter:700 | loss: 0.117
+iter:800 | loss: 0.145
+| end of epoch  10 | time: 150.11s | loss 0.1432 | rse 0.0021 | mae 0.1312 | rmse 0.8705 | r2 0.9949 | da 0.3611 | tda 0.2629
+iter:  0 | loss: 0.109
+iter:100 | loss: 0.144
+iter:200 | loss: 0.195
+iter:300 | loss: 0.165
+iter:400 | loss: 0.214
+iter:500 | loss: 0.148
+iter:600 | loss: 0.132
+iter:700 | loss: 0.132
+iter:800 | loss: 0.099
+| end of epoch  11 | time: 150.07s | loss 0.1426 | rse 0.0021 | mae 0.1358 | rmse 0.8738 | r2 0.9948 | da 0.3610 | tda 0.2697
+iter:  0 | loss: 0.172
+iter:100 | loss: 0.137
+iter:200 | loss: 0.152
+iter:300 | loss: 0.119
+iter:400 | loss: 0.142
+iter:500 | loss: 0.147
+iter:600 | loss: 0.168
+iter:700 | loss: 0.111
+iter:800 | loss: 0.114
+| end of epoch  12 | time: 150.16s | loss 0.1417 | rse 0.0021 | mae 0.1311 | rmse 0.8704 | r2 0.9949 | da 0.3611 | tda 0.2619
+iter:  0 | loss: 0.137
+iter:100 | loss: 0.092
+iter:200 | loss: 0.095
+iter:300 | loss: 0.120
+iter:400 | loss: 0.123
+iter:500 | loss: 0.123
+iter:600 | loss: 0.109
+iter:700 | loss: 0.111
+iter:800 | loss: 0.137
+| end of epoch  13 | time: 150.07s | loss 0.1416 | rse 0.0021 | mae 0.1311 | rmse 0.8710 | r2 0.9949 | da 0.3609 | tda 0.2589
+iter:  0 | loss: 0.174
+iter:100 | loss: 0.166
+iter:200 | loss: 0.128
+iter:300 | loss: 0.109
+iter:400 | loss: 0.124
+iter:500 | loss: 0.146
+iter:600 | loss: 0.150
+iter:700 | loss: 0.107
+iter:800 | loss: 0.172
+| end of epoch  14 | time: 150.05s | loss 0.1415 | rse 0.0021 | mae 0.1318 | rmse 0.8709 | r2 0.9949 | da 0.3608 | tda 0.2590
+iter:  0 | loss: 0.099
+iter:100 | loss: 0.113
+iter:200 | loss: 0.162
+iter:300 | loss: 0.129
+iter:400 | loss: 0.130
+iter:500 | loss: 0.241
+iter:600 | loss: 0.117
+iter:700 | loss: 0.141
+iter:800 | loss: 0.116
+| end of epoch  15 | time: 150.22s | loss 0.1412 | rse 0.0021 | mae 0.1311 | rmse 0.8708 | r2 0.9949 | da 0.3585 | tda 0.2585
+iter:  0 | loss: 0.145
+iter:100 | loss: 0.136
+iter:200 | loss: 0.136
+iter:300 | loss: 0.248
+iter:400 | loss: 0.107
+iter:500 | loss: 0.095
+iter:600 | loss: 0.118
+iter:700 | loss: 0.150
+iter:800 | loss: 0.093
+| end of epoch  16 | time: 150.16s | loss 0.1408 | rse 0.0021 | mae 0.1339 | rmse 0.8716 | r2 0.9949 | da 0.3580 | tda 0.2615
+iter:  0 | loss: 0.103
+iter:100 | loss: 0.115
+iter:200 | loss: 0.097
+iter:300 | loss: 0.152
+iter:400 | loss: 0.123
+iter:500 | loss: 0.113
+iter:600 | loss: 0.149
+iter:700 | loss: 0.102
+iter:800 | loss: 0.131
+| end of epoch  17 | time: 150.12s | loss 0.1407 | rse 0.0021 | mae 0.1315 | rmse 0.8693 | r2 0.9949 | da 0.3577 | tda 0.2575
+iter:  0 | loss: 0.123
+iter:100 | loss: 0.133
+iter:200 | loss: 0.089
+iter:300 | loss: 0.132
+iter:400 | loss: 0.198
+iter:500 | loss: 0.107
+iter:600 | loss: 0.175
+iter:700 | loss: 0.188
+iter:800 | loss: 0.162
+| end of epoch  18 | time: 150.21s | loss 0.1403 | rse 0.0021 | mae 0.1333 | rmse 0.8713 | r2 0.9949 | da 0.3580 | tda 0.2602
+iter:  0 | loss: 0.195
+iter:100 | loss: 0.160
+iter:200 | loss: 0.197
+iter:300 | loss: 0.131
+iter:400 | loss: 0.122
+iter:500 | loss: 0.148
+iter:600 | loss: 0.137
+iter:700 | loss: 0.158
+iter:800 | loss: 0.101
+| end of epoch  19 | time: 150.15s | loss 0.1403 | rse 0.0021 | mae 0.1310 | rmse 0.8686 | r2 0.9949 | da 0.3604 | tda 0.2560
+iter:  0 | loss: 0.154
+iter:100 | loss: 0.150
+iter:200 | loss: 0.107
+iter:300 | loss: 0.137
+iter:400 | loss: 0.149
+iter:500 | loss: 0.154
+iter:600 | loss: 0.128
+iter:700 | loss: 0.160
+iter:800 | loss: 0.138
+| end of epoch  20 | time: 150.16s | loss 0.1396 | rse 0.0021 | mae 0.1326 | rmse 0.8713 | r2 0.9949 | da 0.3584 | tda 0.2632
+iter:  0 | loss: 0.170
+iter:100 | loss: 0.147
+iter:200 | loss: 0.196
+iter:300 | loss: 0.144
+iter:400 | loss: 0.245
+iter:500 | loss: 0.205
+iter:600 | loss: 0.155
+iter:700 | loss: 0.162
+iter:800 | loss: 0.126
+| end of epoch  21 | time: 149.99s | loss 0.1395 | rse 0.0021 | mae 0.1359 | rmse 0.8742 | r2 0.9949 | da 0.3596 | tda 0.2620
+iter:  0 | loss: 0.145
+iter:100 | loss: 0.124
+iter:200 | loss: 0.126
+iter:300 | loss: 0.145
+iter:400 | loss: 0.111
+iter:500 | loss: 0.156
+iter:600 | loss: 0.164
+iter:700 | loss: 0.120
+iter:800 | loss: 0.137
+| end of epoch  22 | time: 150.14s | loss 0.1394 | rse 0.0021 | mae 0.1309 | rmse 0.8691 | r2 0.9949 | da 0.3584 | tda 0.2571
+iter:  0 | loss: 0.083
+iter:100 | loss: 0.153
+iter:200 | loss: 0.129
+iter:300 | loss: 0.168
+iter:400 | loss: 0.147
+iter:500 | loss: 0.165
+iter:600 | loss: 0.093
+iter:700 | loss: 0.114
+iter:800 | loss: 0.150
+| end of epoch  23 | time: 150.25s | loss 0.1394 | rse 0.0021 | mae 0.1354 | rmse 0.8724 | r2 0.9949 | da 0.3581 | tda 0.2612
+iter:  0 | loss: 0.128
+iter:100 | loss: 0.163
+iter:200 | loss: 0.120
+iter:300 | loss: 0.169
+iter:400 | loss: 0.099
+iter:500 | loss: 0.103
+iter:600 | loss: 0.116
+iter:700 | loss: 0.111
+iter:800 | loss: 0.169
+| end of epoch  24 | time: 150.30s | loss 0.1391 | rse 0.0021 | mae 0.1321 | rmse 0.8673 | r2 0.9949 | da 0.3597 | tda 0.2644
+iter:  0 | loss: 0.129
+iter:100 | loss: 0.127
+iter:200 | loss: 0.108
+iter:300 | loss: 0.136
+iter:400 | loss: 0.168
+iter:500 | loss: 0.167
+iter:600 | loss: 0.154
+iter:700 | loss: 0.186
+iter:800 | loss: 0.138
+| end of epoch  25 | time: 150.17s | loss 0.1389 | rse 0.0021 | mae 0.1332 | rmse 0.8702 | r2 0.9949 | da 0.3555 | tda 0.2610
+Run 2 Final Test: RSE 0.0027 | MAE 0.1653 | RMSE 1.1571 | R2 0.9947 | DA 0.3635 | tDA 0.2672
+Model Learned Fusion Weight: 0.1000
+Loading static graph from: ./data/sensor_graph/adj_random.pkl
+Static graph loaded and normalized successfully.
+
+>>> Run 3/3 Begin Training...
+iter:  0 | loss: 0.880
+iter:100 | loss: 0.181
+iter:200 | loss: 0.234
+iter:300 | loss: 0.206
+iter:400 | loss: 0.159
+iter:500 | loss: 0.170
+iter:600 | loss: 0.135
+iter:700 | loss: 0.210
+iter:800 | loss: 0.141
+| end of epoch   1 | time: 150.18s | loss 0.2069 | rse 0.0022 | mae 0.1477 | rmse 0.9317 | r2 0.9943 | da 0.3608 | tda 0.2812
+iter:  0 | loss: 0.135
+iter:100 | loss: 0.163
+iter:200 | loss: 0.139
+iter:300 | loss: 0.151
+iter:400 | loss: 0.199
+iter:500 | loss: 0.175
+iter:600 | loss: 0.205
+iter:700 | loss: 0.155
+iter:800 | loss: 0.116
+| end of epoch   2 | time: 150.19s | loss 0.1631 | rse 0.0021 | mae 0.1408 | rmse 0.8990 | r2 0.9946 | da 0.3602 | tda 0.2726
+iter:  0 | loss: 0.158
+iter:100 | loss: 0.140
+iter:200 | loss: 0.135
+iter:300 | loss: 0.138
+iter:400 | loss: 0.163
+iter:500 | loss: 0.126
+iter:600 | loss: 0.146
+iter:700 | loss: 0.178
+iter:800 | loss: 0.142
+| end of epoch   3 | time: 150.26s | loss 0.1546 | rse 0.0021 | mae 0.1348 | rmse 0.8816 | r2 0.9948 | da 0.3608 | tda 0.2691
+iter:  0 | loss: 0.133
+iter:100 | loss: 0.129
+iter:200 | loss: 0.218
+iter:300 | loss: 0.138
+iter:400 | loss: 0.111
+iter:500 | loss: 0.136
+iter:600 | loss: 0.173
+iter:700 | loss: 0.139
+iter:800 | loss: 0.149
+| end of epoch   4 | time: 150.19s | loss 0.1494 | rse 0.0021 | mae 0.1461 | rmse 0.8992 | r2 0.9945 | da 0.3564 | tda 0.2680
+iter:  0 | loss: 0.137
+iter:100 | loss: 0.125
+iter:200 | loss: 0.097
+iter:300 | loss: 0.114
+iter:400 | loss: 0.146
+iter:500 | loss: 0.195
+iter:600 | loss: 0.155
+iter:700 | loss: 0.150
+iter:800 | loss: 0.092
+| end of epoch   5 | time: 150.25s | loss 0.1475 | rse 0.0021 | mae 0.1321 | rmse 0.8742 | r2 0.9949 | da 0.3628 | tda 0.2671
+iter:  0 | loss: 0.139
+iter:100 | loss: 0.171
+iter:200 | loss: 0.182
+iter:300 | loss: 0.162
+iter:400 | loss: 0.164
+iter:500 | loss: 0.129
+iter:600 | loss: 0.159
+iter:700 | loss: 0.160
+iter:800 | loss: 0.142
+| end of epoch   6 | time: 150.05s | loss 0.1454 | rse 0.0021 | mae 0.1374 | rmse 0.8772 | r2 0.9948 | da 0.3583 | tda 0.2674
+iter:  0 | loss: 0.190
+iter:100 | loss: 0.160
+iter:200 | loss: 0.141
+iter:300 | loss: 0.101
+iter:400 | loss: 0.124
+iter:500 | loss: 0.101
+iter:600 | loss: 0.168
+iter:700 | loss: 0.118
+iter:800 | loss: 0.144
+| end of epoch   7 | time: 150.28s | loss 0.1450 | rse 0.0021 | mae 0.1332 | rmse 0.8723 | r2 0.9949 | da 0.3583 | tda 0.2595
+iter:  0 | loss: 0.144
+iter:100 | loss: 0.202
+iter:200 | loss: 0.123
+iter:300 | loss: 0.153
+iter:400 | loss: 0.112
+iter:500 | loss: 0.161
+iter:600 | loss: 0.115
+iter:700 | loss: 0.101
+iter:800 | loss: 0.241
+| end of epoch   8 | time: 150.29s | loss 0.1442 | rse 0.0021 | mae 0.1324 | rmse 0.8738 | r2 0.9949 | da 0.3557 | tda 0.2555
+iter:  0 | loss: 0.087
+iter:100 | loss: 0.095
+iter:200 | loss: 0.162
+iter:300 | loss: 0.109
+iter:400 | loss: 0.116
+iter:500 | loss: 0.215
+iter:600 | loss: 0.123
+iter:700 | loss: 0.092
+iter:800 | loss: 0.140
+| end of epoch   9 | time: 150.27s | loss 0.1438 | rse 0.0021 | mae 0.1325 | rmse 0.8724 | r2 0.9949 | da 0.3595 | tda 0.2581
+iter:  0 | loss: 0.092
+iter:100 | loss: 0.186
+iter:200 | loss: 0.158
+iter:300 | loss: 0.130
+iter:400 | loss: 0.088
+iter:500 | loss: 0.125
+iter:600 | loss: 0.169
+iter:700 | loss: 0.124
+iter:800 | loss: 0.135
+| end of epoch  10 | time: 150.22s | loss 0.1430 | rse 0.0021 | mae 0.1383 | rmse 0.8802 | r2 0.9948 | da 0.3583 | tda 0.2630
+iter:  0 | loss: 0.141
+iter:100 | loss: 0.148
+iter:200 | loss: 0.165
+iter:300 | loss: 0.153
+iter:400 | loss: 0.168
+iter:500 | loss: 0.171
+iter:600 | loss: 0.162
+iter:700 | loss: 0.121
+iter:800 | loss: 0.140
+| end of epoch  11 | time: 150.14s | loss 0.1428 | rse 0.0021 | mae 0.1316 | rmse 0.8695 | r2 0.9949 | da 0.3612 | tda 0.2583
+iter:  0 | loss: 0.140
+iter:100 | loss: 0.144
+iter:200 | loss: 0.131
+iter:300 | loss: 0.142
+iter:400 | loss: 0.117
+iter:500 | loss: 0.134
+iter:600 | loss: 0.138
+iter:700 | loss: 0.103
+iter:800 | loss: 0.131
+| end of epoch  12 | time: 150.17s | loss 0.1428 | rse 0.0021 | mae 0.1314 | rmse 0.8696 | r2 0.9949 | da 0.3605 | tda 0.2600
+iter:  0 | loss: 0.111
+iter:100 | loss: 0.128
+iter:200 | loss: 0.142
+iter:300 | loss: 0.204
+iter:400 | loss: 0.131
+iter:500 | loss: 0.215
+iter:600 | loss: 0.131
+iter:700 | loss: 0.136
+iter:800 | loss: 0.090
+| end of epoch  13 | time: 150.32s | loss 0.1419 | rse 0.0021 | mae 0.1322 | rmse 0.8707 | r2 0.9949 | da 0.3574 | tda 0.2577
+iter:  0 | loss: 0.144
+iter:100 | loss: 0.144
+iter:200 | loss: 0.148
+iter:300 | loss: 0.100
+iter:400 | loss: 0.179
+iter:500 | loss: 0.126
+iter:600 | loss: 0.089
+iter:700 | loss: 0.121
+iter:800 | loss: 0.204
+| end of epoch  14 | time: 150.34s | loss 0.1411 | rse 0.0021 | mae 0.1343 | rmse 0.8711 | r2 0.9949 | da 0.3591 | tda 0.2654
+iter:  0 | loss: 0.109
+iter:100 | loss: 0.089
+iter:200 | loss: 0.108
+iter:300 | loss: 0.149
+iter:400 | loss: 0.154
+iter:500 | loss: 0.098
+iter:600 | loss: 0.185
+iter:700 | loss: 0.267
+iter:800 | loss: 0.123
+| end of epoch  15 | time: 150.41s | loss 0.1415 | rse 0.0021 | mae 0.1350 | rmse 0.8719 | r2 0.9949 | da 0.3611 | tda 0.2694
+iter:  0 | loss: 0.119
+iter:100 | loss: 0.120
+iter:200 | loss: 0.139
+iter:300 | loss: 0.146
+iter:400 | loss: 0.220
+iter:500 | loss: 0.100
+iter:600 | loss: 0.115
+iter:700 | loss: 0.170
+iter:800 | loss: 0.167
+| end of epoch  16 | time: 150.25s | loss 0.1408 | rse 0.0021 | mae 0.1344 | rmse 0.8731 | r2 0.9949 | da 0.3544 | tda 0.2557
+iter:  0 | loss: 0.258
+iter:100 | loss: 0.091
+iter:200 | loss: 0.131
+iter:300 | loss: 0.126
+iter:400 | loss: 0.129
+iter:500 | loss: 0.125
+iter:600 | loss: 0.145
+iter:700 | loss: 0.101
+iter:800 | loss: 0.081
+| end of epoch  17 | time: 150.26s | loss 0.1411 | rse 0.0021 | mae 0.1311 | rmse 0.8694 | r2 0.9949 | da 0.3633 | tda 0.2615
+iter:  0 | loss: 0.088
+iter:100 | loss: 0.111
+iter:200 | loss: 0.111
+iter:300 | loss: 0.126
+iter:400 | loss: 0.154
+iter:500 | loss: 0.140
+iter:600 | loss: 0.094
+iter:700 | loss: 0.158
+iter:800 | loss: 0.156
+| end of epoch  18 | time: 150.22s | loss 0.1405 | rse 0.0021 | mae 0.1310 | rmse 0.8688 | r2 0.9949 | da 0.3590 | tda 0.2554
+iter:  0 | loss: 0.152
+iter:100 | loss: 0.079
+iter:200 | loss: 0.172
+iter:300 | loss: 0.108
+iter:400 | loss: 0.121
+iter:500 | loss: 0.128
+iter:600 | loss: 0.195
+iter:700 | loss: 0.104
+iter:800 | loss: 0.125
+| end of epoch  19 | time: 150.28s | loss 0.1404 | rse 0.0021 | mae 0.1333 | rmse 0.8694 | r2 0.9949 | da 0.3595 | tda 0.2649
+iter:  0 | loss: 0.128
+iter:100 | loss: 0.152
+iter:200 | loss: 0.170
+iter:300 | loss: 0.124
+iter:400 | loss: 0.128
+iter:500 | loss: 0.144
+iter:600 | loss: 0.142
+iter:700 | loss: 0.169
+iter:800 | loss: 0.165
+| end of epoch  20 | time: 150.12s | loss 0.1397 | rse 0.0021 | mae 0.1321 | rmse 0.8681 | r2 0.9949 | da 0.3590 | tda 0.2604
+iter:  0 | loss: 0.106
+iter:100 | loss: 0.144
+iter:200 | loss: 0.114
+iter:300 | loss: 0.196
+iter:400 | loss: 0.150
+iter:500 | loss: 0.166
+iter:600 | loss: 0.171
+iter:700 | loss: 0.175
+iter:800 | loss: 0.154
+| end of epoch  21 | time: 150.21s | loss 0.1400 | rse 0.0021 | mae 0.1317 | rmse 0.8683 | r2 0.9949 | da 0.3580 | tda 0.2564
+iter:  0 | loss: 0.113
+iter:100 | loss: 0.161
+iter:200 | loss: 0.109
+iter:300 | loss: 0.155
+iter:400 | loss: 0.115
+iter:500 | loss: 0.138
+iter:600 | loss: 0.120
+iter:700 | loss: 0.151
+iter:800 | loss: 0.172
+| end of epoch  22 | time: 150.28s | loss 0.1397 | rse 0.0021 | mae 0.1312 | rmse 0.8664 | r2 0.9949 | da 0.3607 | tda 0.2607
+iter:  0 | loss: 0.137
+iter:100 | loss: 0.141
+iter:200 | loss: 0.122
+iter:300 | loss: 0.174
+iter:400 | loss: 0.184
+iter:500 | loss: 0.146
+iter:600 | loss: 0.118
+iter:700 | loss: 0.143
+iter:800 | loss: 0.077
+| end of epoch  23 | time: 150.14s | loss 0.1398 | rse 0.0021 | mae 0.1314 | rmse 0.8698 | r2 0.9949 | da 0.3569 | tda 0.2564
+iter:  0 | loss: 0.104
+iter:100 | loss: 0.139
+iter:200 | loss: 0.174
+iter:300 | loss: 0.217
+iter:400 | loss: 0.152
+iter:500 | loss: 0.195
+iter:600 | loss: 0.131
+iter:700 | loss: 0.120
+iter:800 | loss: 0.182
+| end of epoch  24 | time: 150.25s | loss 0.1395 | rse 0.0021 | mae 0.1324 | rmse 0.8685 | r2 0.9949 | da 0.3564 | tda 0.2546
+iter:  0 | loss: 0.161
+iter:100 | loss: 0.138
+iter:200 | loss: 0.126
+iter:300 | loss: 0.190
+iter:400 | loss: 0.098
+iter:500 | loss: 0.127
+iter:600 | loss: 0.183
+iter:700 | loss: 0.133
+iter:800 | loss: 0.104
+| end of epoch  25 | time: 150.37s | loss 0.1394 | rse 0.0021 | mae 0.1325 | rmse 0.8697 | r2 0.9949 | da 0.3577 | tda 0.2628
+Run 3 Final Test: RSE 0.0027 | MAE 0.1642 | RMSE 1.1572 | R2 0.9947 | DA 0.3638 | tDA 0.2664
+Model Learned Fusion Weight: 0.1000
+
+==================================================
+Summary over 3 runs
+==================================================
+Metric     | Mean       | Std       
+------------------------------------
+MAE        | 0.1646     | 0.0005    
+RMSE       | 1.1573     | 0.0003    
+MAPE       | 0.0009     | 0.0000    
+R2         | 0.9947     | 0.0000    
+RSE        | 0.0027     | 0.0000    
+CORR       | 0.9974     | 0.0000    
+DA         | 0.3629     | 0.0012    
+TDA        | 0.2665     | 0.0005    
+==================================================

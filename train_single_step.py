@@ -1,6 +1,7 @@
 import argparse
 import math
 import time
+import os
 import torch
 import torch.nn as nn
 from net import gtnet
@@ -13,93 +14,110 @@ from trainer import Optim
 # ==========================================
 # 1. 升级版 Evaluate 函数 (全指标)
 # ==========================================
-def evaluate(data, X, Y, model, evaluateL2, evaluateL1, batch_size):
+def evaluate(data, X, Y, model, evaluateL2, evaluateL1, batch_size,
+             save_dir=None, run_id=None):
+    """
+    评估函数。
+    save_dir + run_id 均不为 None 时，将预测差分（diff_pred, diff_true）
+    保存到 save_dir/diff_pred_run{run_id}.npy 供 backtest.py 使用。
+    新增指标：
+      DA   - 全样本方向准确率
+      tDA  - 高置信样本方向准确率（|diff_pred| > median(|diff_true|)）
+    """
     model.eval()
     total_loss = 0
     total_loss_l1 = 0
     total_mape = 0
-    total_da_correct = 0
+    total_da_correct  = 0
+    total_tda_correct = 0
+    total_tda_count   = 0
     n_samples = 0
     predict = None
-    test = None
+    test    = None
+
+    diff_pred_batches = []
+    diff_true_batches = []
 
     for X, Y in data.get_batches(X, Y, batch_size, False):
-        X = torch.unsqueeze(X,dim=1)
-        X = X.transpose(2,3)
+        X = torch.unsqueeze(X, dim=1)
+        X = X.transpose(2, 3)
         with torch.no_grad():
             output = model(X)
         output = torch.squeeze(output)
-        if len(output.shape)==1:
+        if len(output.shape) == 1:
             output = output.unsqueeze(dim=0)
         if predict is None:
-            predict = output
-            test = Y
+            predict, test = output, Y
         else:
             predict = torch.cat((predict, output))
-            test = torch.cat((test, Y))
+            test    = torch.cat((test, Y))
 
-        # 核心逻辑：无论是 Baseline 还是 RevIN，output * scale 都是真实值
-        scale = data.scale.expand(output.size(0), data.m)
-        pred_real = output * scale
-        true_real = Y * scale
-        
-        # 累加误差
-        total_loss += evaluateL2(pred_real, true_real).item() # MSE Sum
-        total_loss_l1 += evaluateL1(pred_real, true_real).item() # MAE Sum
-        
-        # 计算 MAPE (加 1e-5 防止除零)
-        mape_batch = torch.abs((pred_real - true_real) / (true_real + 1e-5))
-        total_mape += torch.sum(mape_batch).item()
+        scale     = data.scale.expand(output.size(0), data.m)
+        pred_real = output * scale          # (B, M) 真实空间预测
+        true_real = Y * scale               # (B, M) 真实空间标签
 
-        # === 创新点2：计算方向准确率 (DA) ===
-        # 获取输入序列的最后一步(今天真实的收盘价)
-        last_price = X[:, 0, :, -1] * scale
-        # 预测涨跌
-        diff_pred = pred_real - last_price
-        # 实际涨跌
-        diff_true = true_real - last_price
-        # 符号相同即为预测正确 (乘积大于0)
+        total_loss    += evaluateL2(pred_real, true_real).item()
+        total_loss_l1 += evaluateL1(pred_real, true_real).item()
+        mape_batch     = torch.abs((pred_real - true_real) / (true_real.abs() + 1e-5))
+        total_mape    += torch.sum(mape_batch).item()
+
+        # ── 方向指标 ─────────────────────────────────────────────────
+        last_price = X[:, 0, :, -1] * scale    # 输入窗口最后一个价格
+        diff_pred  = pred_real - last_price     # 预测涨跌量
+        diff_true  = true_real - last_price     # 真实涨跌量
+
+        # 全样本 DA
         correct_mask = (diff_pred * diff_true) > 0
         total_da_correct += correct_mask.sum().item()
-        
-        n_samples += (output.size(0) * data.m)
 
-    # 计算各项指标
-    rse = math.sqrt(total_loss / n_samples) / data.rse
-    rae = (total_loss_l1 / n_samples) / data.rae
-    
+        # 高置信 tDA：只统计 |diff_pred| > 该 batch 的 median(|diff_true|)
+        threshold = torch.abs(diff_true).median()
+        conf_mask = torch.abs(diff_pred) > threshold
+        total_tda_correct += (correct_mask & conf_mask).sum().item()
+        total_tda_count   += conf_mask.sum().item()
+
+        # 收集差分供回测保存
+        diff_pred_batches.append(diff_pred.detach().cpu().numpy())
+        diff_true_batches.append(diff_true.detach().cpu().numpy())
+
+        n_samples += output.size(0) * data.m
+
+    # ── 统计指标 ─────────────────────────────────────────────────────
+    rse  = math.sqrt(total_loss / n_samples) / data.rse
+    rae  = (total_loss_l1 / n_samples) / data.rae
     rmse = math.sqrt(total_loss / n_samples)
-    mae = total_loss_l1 / n_samples
+    mae  = total_loss_l1 / n_samples
     mape = total_mape / n_samples
-    da = total_da_correct / n_samples
+    da   = total_da_correct / n_samples
+    tda  = total_tda_correct / max(total_tda_count, 1)
 
-    # 计算 Correlation 和 R2
     predict = predict.data.cpu().numpy()
-    Ytest = test.data.cpu().numpy()
-    sigma_p = (predict).std(axis=0)
-    sigma_g = (Ytest).std(axis=0)
-    mean_p = predict.mean(axis=0)
-    mean_g = Ytest.mean(axis=0)
-    index = (sigma_g != 0)
+    Ytest   = test.data.cpu().numpy()
+    sigma_p = predict.std(axis=0)
+    sigma_g = Ytest.std(axis=0)
+    mean_p  = predict.mean(axis=0)
+    mean_g  = Ytest.mean(axis=0)
+    index   = sigma_g != 0
     correlation = ((predict - mean_p) * (Ytest - mean_g)).mean(axis=0) / (sigma_p * sigma_g)
-    correlation = (correlation[index]).mean()
-    
+    correlation = correlation[index].mean()
+
     r2_list = []
-    for i in range(predict.shape[1]): # 遍历每个节点(货币)
-        y_true_node = Ytest[:, i]
-        y_pred_node = predict[:, i]
-        ss_res_node = np.sum((y_true_node - y_pred_node) ** 2)
-        ss_tot_node = np.sum((y_true_node - np.mean(y_true_node)) ** 2)
-        
-        # 防止分母为0
-        if ss_tot_node < 1e-5:
-            r2_node = 0
-        else:
-            r2_node = 1 - ss_res_node / ss_tot_node
-        r2_list.append(r2_node)
+    for i in range(predict.shape[1]):
+        y_t = Ytest[:, i];  y_p = predict[:, i]
+        ss_res = np.sum((y_t - y_p) ** 2)
+        ss_tot = np.sum((y_t - np.mean(y_t)) ** 2)
+        r2_list.append(0.0 if ss_tot < 1e-5 else 1 - ss_res / ss_tot)
     r2 = np.mean(r2_list)
 
-    return rse, rae, correlation, mae, rmse, mape, r2,da
+    # ── 保存预测差分（仅最终测试评估时） ──────────────────────────────
+    if save_dir is not None and run_id is not None:
+        os.makedirs(save_dir, exist_ok=True)
+        np.save(f"{save_dir}/diff_pred_run{run_id}.npy",
+                np.vstack(diff_pred_batches))
+        np.save(f"{save_dir}/diff_true_run{run_id}.npy",
+                np.vstack(diff_true_batches))
+
+    return rse, rae, correlation, mae, rmse, mape, r2, da, tda
 
 # ==========================================
 # 2. Train 函数
@@ -129,41 +147,32 @@ def train(data, X, Y, model, criterion, optim, batch_size):
             output = torch.squeeze(output)
             scale = data.scale.expand(output.size(0), data.m)
             scale = scale[:,id]
-            # DA损失函数
+            # 1. 主损失 (MAE)
             base_loss = criterion(output * scale, ty * scale)
+            loss = base_loss
+
+            # 2. 波动率加权方向性损失（DirLoss）
+            # 核心思想：高波动时段方向预测更有意义（收益更大），加大惩罚权重；
+            #          低波动时段价格几乎不动，方向本就难预测，降低权重避免干扰
             if args.use_dirloss == 1:
-                # 1. 取出今天真实的收盘价 (带 scale 的真实空间)
-                last_price = tx[:, 0, :, -1] * scale 
-                
-                # 2. 计算真实空间的涨跌差分
-                diff_pred = (output * scale) - last_price
-                diff_true = (ty * scale) - last_price
-                
-                # === 2026 ICLR: 向量夹角对比对齐 (Vector Angle Alignment) ===
-                # 彻底放弃绝对数值惩罚，计算预测向量与真实向量的高维余弦相似度
-                
-                # 计算点积
-                dot_product = torch.sum(diff_pred * diff_true)
-                
-                # 计算 L2 范数 (加上 1e-6 防止除以 0，同时在 0 点附近提供极强的“踹出梯度”)
-                norm_pred = torch.sqrt(torch.sum(diff_pred**2) + 1e-6)
-                norm_true = torch.sqrt(torch.sum(diff_true**2) + 1e-6)
-                
-                # 相似度范围 [-1, 1]。同向为正，反向为负。
-                cos_sim = dot_product / (norm_pred * norm_true)
-                
-                # 目标是最大化相似度，所以 Loss 为 1 - cos_sim (范围 0 到 2)
-                dir_loss = 1.0 - cos_sim
-                
-                # === 核心黑科技: 动态多任务量级对齐 (Dynamic Task Balancing) ===
-                # 使用 base_loss.detach() 作为动态乘子，强行让方向惩罚的量级与回归误差同步！
-                # 无论汇率怎么波动，梯度永远处于完美平衡，绝不撕裂 RMSE！
-                adaptive_weight = base_loss.detach()
-                
-                # dir_weight 保持 1.0 即可
-                loss = base_loss + args.dir_weight * adaptive_weight * dir_loss
-            else:
-                loss = base_loss
+                last_price = tx[:, 0, :, -1] * scale
+                diff_pred  = (output * scale) - last_price
+                diff_true  = (ty * scale) - last_price
+
+                # 每个货币对的 batch 平均绝对波动率（做量纲归一化）
+                volatility = torch.abs(diff_true).mean(dim=0, keepdim=True).detach() + 1e-5
+                logits     = diff_pred / volatility
+
+                true_bin = (diff_true > 0).float().detach()
+
+                # 样本级动态权重：波动率大的时段权重高（sigmoid 将绝对波动率映射到 (0,1)）
+                sample_vol   = torch.abs(diff_true).mean(dim=1, keepdim=True).detach()
+                sample_weight = torch.sigmoid(sample_vol / (sample_vol.mean() + 1e-5)).detach()
+                elem_loss    = nn.functional.binary_cross_entropy_with_logits(
+                    logits, true_bin, reduction='none')
+                dir_loss = (sample_weight * elem_loss).mean()
+                loss = loss + args.dir_weight * dir_loss
+
             loss.backward()
             total_loss += loss.item()
             n_samples += (output.size(0) * data.m)
@@ -216,7 +225,7 @@ parser.add_argument('--dual_graph', type=int, default=1, help='1 to use Dual Gra
 parser.add_argument('--adj_data', type=str, default='./data/sensor_graph/adj_mx.pkl', help='path to static graph')
 parser.add_argument('--use_router', type=int, default=1, help='1 to use Router, 0 to disable')
 parser.add_argument('--use_dirloss', type=int, default=1, help='1 to use DirLoss, 0 to disable')
-parser.add_argument('--dir_weight', type=float, default=1.0, help='Weight lambda for Directional Loss')
+parser.add_argument('--dir_weight', type=float, default=0.05, help='Weight lambda for Directional Loss')
 # 新增 runs 参数
 parser.add_argument('--runs', type=int, default=10, help='number of runs to average')
 
@@ -280,6 +289,7 @@ def main(run_id):
                   layer_norm_affline=False, 
                   revin=(args.revin == 1),
                   dual_graph=(args.dual_graph == 1),
+                  use_router=(args.use_router == 1),
                   predefined_A=predefined_A)
     model = model.to(device)
 
@@ -300,65 +310,77 @@ def main(run_id):
     try:
         for epoch in range(1, args.epochs + 1):
             epoch_start_time = time.time()
-            train_loss = train(Data, Data.train[0], Data.train[1], model, criterion, optim, args.batch_size)
-            
-            val_rse, val_rae, val_corr, val_mae, val_rmse, val_mape, val_r2, val_da = evaluate(Data, Data.valid[0], Data.valid[1], model, evaluateL2, evaluateL1, args.batch_size)
-            
+            train_loss = train(Data, Data.train[0], Data.train[1],
+                               model, criterion, optim, args.batch_size)
+
+            val_rse, val_rae, val_corr, val_mae, val_rmse, val_mape, val_r2, val_da, val_tda = \
+                evaluate(Data, Data.valid[0], Data.valid[1],
+                         model, evaluateL2, evaluateL1, args.batch_size)
+
             print(
-                '| end of epoch {:3d} | time: {:5.2f}s | loss {:5.4f} | rse {:5.4f} | mae {:5.4f} | rmse {:5.4f} | r2 {:5.4f} | da {:5.4f}'.format(
-                    epoch, (time.time() - epoch_start_time), train_loss, val_rse, val_mae, val_rmse, val_r2, val_da), flush=True)
+                '| end of epoch {:3d} | time: {:5.2f}s | loss {:5.4f} | rse {:5.4f} '
+                '| mae {:5.4f} | rmse {:5.4f} | r2 {:5.4f} | da {:5.4f} | tda {:5.4f}'.format(
+                    epoch, (time.time() - epoch_start_time), train_loss,
+                    val_rse, val_mae, val_rmse, val_r2, val_da, val_tda), flush=True)
 
             if val_rse < best_val:
                 with open(args.save, 'wb') as f:
                     torch.save(model, f)
                 best_val = val_rse
-                
+
             if epoch % 5 == 0:
-                test_rse, test_rae, test_corr, test_mae, test_rmse, test_mape, test_r2, test_da = evaluate(Data, Data.test[0], Data.test[1], model, evaluateL2, evaluateL1, args.batch_size)
+                test_rse, test_rae, test_corr, test_mae, test_rmse, test_mape, test_r2, test_da, test_tda = \
+                    evaluate(Data, Data.test[0], Data.test[1],
+                             model, evaluateL2, evaluateL1, args.batch_size)
 
     except KeyboardInterrupt:
         print('-' * 89)
         print('Exiting from training early')
 
-    # 加载最佳模型进行最终测试
+    # ── 加载最佳模型，最终测试 + 保存预测数据 ────────────────────────
     with open(args.save, 'rb') as f:
         model = torch.load(f)
 
-    test_rse, test_rae, test_corr, test_mae, test_rmse, test_mape, test_r2, test_da = evaluate(Data, Data.test[0], Data.test[1], model, evaluateL2, evaluateL1, args.batch_size)
-    print(f"Run {run_id+1} Final Test: RSE {test_rse:.4f} | MAE {test_mae:.4f} | RMSE {test_rmse:.4f} | R2 {test_r2:.4f} | DA {test_da:.4f}")
+    # 根据 --save 路径自动推导输出目录，例如 ./model/model_M3.pt → ./output/model_M3/
+    model_name = os.path.splitext(os.path.basename(args.save))[0]
+    pred_save_dir = os.path.join('./output', model_name)
 
-    # 打印学习到的融合权重
+    test_rse, test_rae, test_corr, test_mae, test_rmse, test_mape, test_r2, test_da, test_tda = \
+        evaluate(Data, Data.test[0], Data.test[1],
+                 model, evaluateL2, evaluateL1, args.batch_size,
+                 save_dir=pred_save_dir, run_id=run_id)
+
+    print(f"Run {run_id+1} Final Test: RSE {test_rse:.4f} | MAE {test_mae:.4f} | "
+          f"RMSE {test_rmse:.4f} | R2 {test_r2:.4f} | DA {test_da:.4f} | tDA {test_tda:.4f}")
+
     if args.dual_graph == 1 and hasattr(model, 'fusion_weight'):
         print(f"Model Learned Fusion Weight: {model.fusion_weight.item():.4f}")
-    
-    return test_rse, test_rae, test_corr, test_mae, test_rmse, test_mape, test_r2, test_da
+
+    return test_rse, test_rae, test_corr, test_mae, test_rmse, test_mape, test_r2, test_da, test_tda
 
 if __name__ == "__main__":
-    # 存储每次运行的结果
     results = {
-        'rse': [], 'rae': [], 'corr': [], 
-        'mae': [], 'rmse': [], 'mape': [], 'r2': [], 'da': []
+        'rse': [], 'rae': [], 'corr': [],
+        'mae': [], 'rmse': [], 'mape': [], 'r2': [], 'da': [], 'tda': []
     }
-    
+
     for i in range(args.runs):
-        rse, rae, corr, mae, rmse, mape, r2, da = main(i)
-        results['rse'].append(rse)
-        results['rae'].append(rae)
-        results['corr'].append(corr)
-        results['mae'].append(mae)
-        results['rmse'].append(rmse)
-        results['mape'].append(mape)
-        results['r2'].append(r2)
-        results['da'].append(da)
+        rse, rae, corr, mae, rmse, mape, r2, da, tda = main(i)
+        results['rse'].append(rse);   results['rae'].append(rae)
+        results['corr'].append(corr); results['mae'].append(mae)
+        results['rmse'].append(rmse); results['mape'].append(mape)
+        results['r2'].append(r2);     results['da'].append(da)
+        results['tda'].append(tda)
+
     print('\n' + '='*50)
     print(f'Summary over {args.runs} runs')
     print('='*50)
     print(f"{'Metric':<10} | {'Mean':<10} | {'Std':<10}")
     print('-'*36)
-    
-    for key in ['mae', 'rmse', 'mape', 'r2', 'rse', 'corr', 'da']:
+
+    for key in ['mae', 'rmse', 'mape', 'r2', 'rse', 'corr', 'da', 'tda']:
         mean_val = np.mean(results[key])
-        std_val = np.std(results[key])
+        std_val  = np.std(results[key])
         print(f"{key.upper():<10} | {mean_val:<10.4f} | {std_val:<10.4f}")
-    
+
     print('='*50)
